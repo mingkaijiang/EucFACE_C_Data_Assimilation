@@ -1,6 +1,7 @@
 
 if(!require(pacman))install.packages("pacman")
-pacman::p_load(data.table,
+pacman::p_load(rlang,
+              data.table,
                ggplot2,
                knitr) # add other packages needed to this list
 
