@@ -2,20 +2,48 @@ setup_p_initial_conditions <- function() {
     
     p <- c()
     
-    # dalec model values
+    ### dalec model values
+    ## decomposition rate constant
     p$t1 = 4.41E-06
+    
+    ## autotrophic respiration as a fraction of GPP
     p$t2 = 0.473267
+    
+    ## Fraction of NPP allocated to foliage
     p$t3 = 0.314951
+    
+    ## fraction of NPP allocated to fineroot
     p$t4 = 0.434401
+    
+    ## Turnover rater of foliage
     p$t5 = 0.00266518
+    
+    ## Turnover rate of woody matter
     p$t6 = 2.06E-06
+    
+    ## Turnover rate of fineroot
     p$t7 = 2.48E-03
+    
+    ## Mineralization rate of fresh litter
     p$t8 = 2.28E-02
+    
+    ## Mineralization rate of soil organic matter and woody debris
     p$t9 = 2.65E-06
+    
+    ### Initial conditions
+    ## Filiage C pool
     p$cf0 = 57.7049
+    
+    ## Wood (stems and coarse roots)
     p$cw0 = 769.863
+    
+    ## Fineroot
     p$cr0 = 101.955
+    
+    ## Fresh foliar and fineroot litter
     p$cl0 = 40.4494
+    
+    ## Soil organic matter plus woody debris
     p$cs0 = 9896.7
     
     # acm parameterisation

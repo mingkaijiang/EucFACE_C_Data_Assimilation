@@ -1,10 +1,11 @@
 
+### Clear the console
 rm(list=ls(all=TRUE))
 
 ### source all the input variables and functions
 source("include/prepare.R")
 
-### prepare stuffs
+### prepare observation data matrix
 obs <- c()
 
 ### read in met data

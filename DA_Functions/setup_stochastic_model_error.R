@@ -6,8 +6,8 @@ setup_stochastic_model_error <- function(p) {
     # number of timesteps per time unit
     n = 1.0
     
-    num = (1.0 - p$alpha)**2
-    den = n - 2.0 * p$alpha * n * p$alpha**2 + (2.0 * p$alpha)**(n + 1.0)
+    num = (1.0 - p$alpha)^2
+    den = n - 2.0 * p$alpha * n * p$alpha^2 + (2.0 * p$alpha)^(n + 1.0)
     
     return(sqrt(1.0 / p$delta_t * num / den))
 }
