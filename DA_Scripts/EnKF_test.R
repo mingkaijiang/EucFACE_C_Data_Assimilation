@@ -34,6 +34,7 @@ err_type <- initialise_error_type(s, err_type)
 ndays <- nrow(met)
 ensembleDF <- data.frame(ndays, NA, NA)
 colnames(ensembleDF) <- c("Days", "ensemble_member_avg", "ensemble_member_stdev_error")
+ensembleDF$Days <- 1:ndays
 
 for (i in 1:nrow(met)) {
     out <- forecast(s, p, met, i, A, err_var,
@@ -53,5 +54,10 @@ for (i in 1:nrow(met)) {
     
 }
 
-
-
+### Plotting
+ggplot(ensembleDF) +
+    geom_ribbon(aes(x = Days, ymin=ensemble_member_avg-ensemble_member_stdev_error, 
+                  ymax=ensemble_member_avg+ensemble_member_stdev_error, fill="st.dev"), alpha=1) +
+    geom_line(aes(y = ensemble_member_avg, x=Days, color = "black")) +
+    scale_colour_manual("", values = "blue") +
+    scale_fill_manual("", values = "grey")
