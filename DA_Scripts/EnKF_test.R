@@ -11,7 +11,7 @@ obs <- c()
 ### read in met data
 met = read.csv("Martin_Python/data/dalec_drivers.OREGON.no_obs.csv")
 
-### initialise structures
+### initialise parameters and structures
 p <- setup_p_initial_conditions()
 s <- setup_s_initial_conditions()
 
@@ -31,27 +31,31 @@ A <- initialise_ensemble(p, s, A)
 err_var <- initialise_error_variance(s, err_var)
 err_type <- initialise_error_type(s, err_type)
 
-### Run predictive model
+### set up storage df to store the simulation output, with uncertainties
 ndays <- nrow(met)
-ensembleDF <- data.frame(ndays, NA, NA)
+ensembleDF <- data.frame(c(1:ndays), NA, NA)
 colnames(ensembleDF) <- c("Days", "ensemble_member_avg", "ensemble_member_stdev_error")
-ensembleDF$Days <- 1:ndays
+ensembleDF$Days <- c(1:ndays)
 
-for (i in 1:nrow(met)) {
+### Run the model
+for (i in 1:ndays) {
+    
+    ## Forecast model
     out <- forecast(s, p, met, i, A, err_var,
                     err_type, ens_var, q)
     
+    ## break the list of the forecast model
     A <- out$A
     ens_var <- out$ens_var
     q <- out$q
     
-    # Recalcualte model forecast where observations are avaliable
+    ## Recalcualte model forecast where observations are avaliable
     # if (s$nrobs > 0) {
     #     analysis(A, c, obs)
     # }
     
-    # Print to screen outputs
-    ensembleDF[i, 2:3] <- dump_output(s, A)
+    # Print to screen outputs and save output
+    ensembleDF[i, 2:3] <- dump_output(s, A, screen.option=F)
     
 }
 

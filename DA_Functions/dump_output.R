@@ -1,4 +1,4 @@
-dump_output <- function(s, A) {
+dump_output <- function(s, A, screen.option) {
     
     x = sum(A[s$POS_CF,])
     x2 = sum(A[s$POS_CF,]^2)
@@ -8,7 +8,9 @@ dump_output <- function(s, A) {
     
     print.out <- c(ensemble_member_avg, ensemble_member_stdev_error)
     
-    # print(print.out)
-    
+    if (screen.option == T) {
+        print(print.out)  
+    }
+
     return(print.out)
 }

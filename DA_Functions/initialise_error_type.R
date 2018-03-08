@@ -1,4 +1,7 @@
 initialise_error_type <- function(s, err_type) {
+    ## Define types of error 
+    ## % as 1
+    ## absolute values as 0
     
     err_type[s$POS_RA] = 1
     err_type[s$POS_AF] = 1

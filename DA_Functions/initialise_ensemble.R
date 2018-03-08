@@ -1,4 +1,7 @@
 initialise_ensemble <- function(p, s, A) {
+    
+    ### Why initialize with the following equations? Are they mostly random numbers, and
+    ### since they are evolving over time, the initial condition doesn't matter that much?
     A[s$POS_RA,] = 1.0 + rnorm(s$nrens, 0.0, 0.1 * 1.0)
     A[s$POS_AF,] = 0.3 + rnorm(s$nrens, 0.0, 0.1 * 0.3)
     A[s$POS_AW,] = 0.3 + rnorm(s$nrens, 0.0, 0.1 * 0.3)
