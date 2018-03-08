@@ -30,6 +30,11 @@ A <- initialise_ensemble(p, s, A)
 err_var <- initialise_error_variance(s, err_var)
 err_type <- initialise_error_type(s, err_type)
 
+### Run predictive model
+ndays <- nrow(met)
+ensembleDF <- data.frame(ndays, NA, NA)
+colnames(ensembleDF) <- c("Days", "ensemble_member_avg", "ensemble_member_stdev_error")
+
 for (i in 1:nrow(met)) {
     out <- forecast(s, p, met, i, A, err_var,
                     err_type, ens_var, q)
@@ -37,11 +42,16 @@ for (i in 1:nrow(met)) {
     A <- out$A
     ens_var <- out$ens_var
     q <- out$q
+    
+    # Recalcualte model forecast where observations are avaliable
+    # if (s$nrobs > 0) {
+    #     analysis(A, c, obs)
+    # }
+    
+    # Print to screen outputs
+    ensembleDF[i, 2:3] <- dump_output(s, A)
+    
 }
 
 
-# Recalcualte model forecast where observations are avaliable
-#if c.nrobs > 0:
-#    analysis(A, c, obs)
 
-dump_output(s, A)
