@@ -1,10 +1,10 @@
 forecast <- function(s, p, met, i, A, err_var, err_type, ens_var, q) {
     
     A_tmp = matrix(0, s$ndims, s$nrens)
-    A_mean = seq(0, s$ndims)
+    A_mean = rep(0, s$ndims)
     
     # generate model prediction
-    lai = max(0.1, A[s$POS_CF,]  / p$sla)
+    lai = pmax(0.1, A[s$POS_CF,]  / p$sla)
     gpp = acm(met, p, lai, i)
     
     A_tmp[s$POS_GPP,] <- gpp
@@ -24,7 +24,7 @@ forecast <- function(s, p, met, i, A, err_var, err_type, ens_var, q) {
     A_tmp[s$POS_CL,] <- A[s$POS_CL,] + A[s$POS_LF,] + A[s$POS_LR,] - A[s$POS_RH1,] - A[s$POS_D,]
     A_tmp[s$POS_CS,] <- A[s$POS_CS,] + A[s$POS_D,] + A[s$POS_LW,] - A[s$POS_RH2,]
     
-    A <- duplicate(A_tmp, shallow = FALSE)
+    A <- A_tmp
     
     # Calculate ensemble average
     for (j in 1:s$ndims) {
@@ -38,7 +38,6 @@ forecast <- function(s, p, met, i, A, err_var, err_type, ens_var, q) {
         }
     }
         
-    
     # simulate the time evolution of model errors
     for (j in 1:s$ndims) {
         for (k in 1:s$nrens) {

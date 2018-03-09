@@ -1,5 +1,7 @@
 acm <- function(met, p, lai, i) {
     
+    ## This is a gpp model
+    
     trange <- 0.5 * (met$maxt[i] - met$mint[i])
     gs <- abs(met$psid[i])^p$a9 / (p$a5 * met$rtot[i] + trange)
     pp <- lai * met$nit[i] / gs * p$a0 * exp(p$a7 * met$maxt[i])
