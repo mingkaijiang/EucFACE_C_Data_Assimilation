@@ -36,11 +36,11 @@ ndays <- nrow(met)
 ensembleDF <- matrix(0, nrow=ndays, ncol=(1+s$ndims*2))
 ensembleDF <- as.data.frame(ensembleDF)
 colnames(ensembleDF) <- c("Days", "RA", "AF", "AW", "AR", "LF", "LW", "LR",
-                          "RH1", "RH2", "D", "GPP", "CF", "CW", "CR", "CL", "CS",
+                          "CF", "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP", 
                           'RA_STDEV', "AF_STDEV", "AW_STDEV", "AR_STDEV", 
-                          "LF_STDEV", "LW_STDEV", "LR_STDEV", "RH1_STDEV", 
-                          "RH2_STDEV", "D_STDEV", "GPP_STDEV", "CF_STDEV", 
-                          "CW_STDEV", "CR_STDEV", "CL_STDEV", "CS_STDEV")
+                          "LF_STDEV", "LW_STDEV", "LR_STDEV", "CF_STDEV", 
+                          "CW_STDEV", "CR_STDEV", "RH1_STDEV", "RH2_STDEV", 
+                          "D_STDEV", "CL_STDEV", "CS_STDEV", "GPP_STDEV")
 ensembleDF$Days <- c(1:ndays)
 
 ### Run the model

@@ -25,7 +25,7 @@ forecast <- function(s, p, met, i, A, err_var, err_type, ens_var, q) {
     A_tmp[s$POS_CS,] <- A[s$POS_CS,] + A[s$POS_D,] + A[s$POS_LW,] - A[s$POS_RH2,]
     
     A <- A_tmp
-    
+
     # Calculate ensemble average
     for (j in 1:s$ndims) {
         A_mean[j] <- sum(A[j,]) / s$nrens
