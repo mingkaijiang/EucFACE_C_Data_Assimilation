@@ -1,15 +1,14 @@
 
-### Clear the console
+####---- Clear the console ----####
 rm(list=ls(all=TRUE))
 
-### source all the input variables and functions
+####----  source all the input variables and functions ----####
 source("include/prepare.R")
 
-### prepare observation data matrix
-obs <- c()
-
+####----  Set up the model stuffs ----####
 ### read in met data
 met = read.csv("Martin_Python/data/dalec_drivers.OREGON.no_obs.csv")
+ndays <- nrow(met)
 
 ### initialise parameters and structures
 p <- setup_p_initial_conditions()
@@ -31,8 +30,29 @@ A <- initialise_ensemble(p, s, A)
 err_var <- initialise_error_variance(s, err_var)
 err_type <- initialise_error_type(s, err_type)
 
-### set up storage df to store the simulation output, with uncertainties
-ndays <- nrow(met)
+####----  Set up the observation stuffs ----####
+### prepare observation data matrix
+obs <- c()
+
+### Create the observational matrix, for each state and day
+B <- matrix(0, s$ndims, ndays)
+
+### intialize measurement noise matrix
+q_obs <- matrix(rnorm(s$ndims*ndays, 0.0, 1.0), s$ndims, ndays)
+    
+### initialize measurement matrix
+B <- initialise_observation(p, s, B)
+
+### initialize measurement error variance and type
+err_var_obs <- matrix(0, s$ndims, ndays)
+err_type_obs <- rep(0, s$ndims)
+ens_var_obs <- matrix(0, s$ndims, ndays)
+
+err_var_obs <- initialise_obs_error_variance(s, err_var_obs)
+err_type_obs <- initialise_obs_error_type(s, err_type_obs)
+
+
+####----  set up storage df to store the simulation output, with uncertainties ----####
 ensembleDF <- matrix(0, nrow=ndays, ncol=(1+s$ndims*2))
 ensembleDF <- as.data.frame(ensembleDF)
 colnames(ensembleDF) <- c("Days", "RA", "AF", "AW", "AR", "LF", "LW", "LR",
@@ -43,7 +63,7 @@ colnames(ensembleDF) <- c("Days", "RA", "AF", "AW", "AR", "LF", "LW", "LR",
                           "D_STDEV", "CL_STDEV", "CS_STDEV", "GPP_STDEV")
 ensembleDF$Days <- c(1:ndays)
 
-### Run the model
+####---- Run the model ----####
 for (i in 1:ndays) {
     
     ## Forecast model
@@ -56,8 +76,9 @@ for (i in 1:ndays) {
     q <- out$q
     
     ## Recalcualte model forecast where observations are avaliable
+    ## need to consider obs at timestep i
     # if (s$nrobs > 0) {
-    #     analysis(A, c, obs)
+    #     analysis(A, s, obs, i)
     # }
     
     # Save output
@@ -65,7 +86,7 @@ for (i in 1:ndays) {
     
 }
 
-### Plotting
+####----  Plotting ----####
 ggplot(ensembleDF) +
     geom_ribbon(aes(x = Days, ymin=CF-CF_STDEV, 
                   ymax=CF+CF_STDEV, fill="st.dev"), alpha=1) +

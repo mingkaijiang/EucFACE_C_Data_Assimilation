@@ -1,7 +1,7 @@
-analysis <- function(A, s, obs) {
+analysis <- function(A, s, obs, i) {
     
-    ### The standard analysis eqn: A = A + Pe H^T(H Pe H^T + Re)^-1 (D - H A) can
-    ### be reformed using D' = D - HA, Pe = A'(A')^T, Re = YY^T
+    ### The standard analysis eqn: A = A + Pe H^T(H Pe H^T + Re)^-1 (D - H A)    (eq 48)
+    ### can be reformed using D' = D - HA, Pe = A'(A')^T, Re = YY^T
     ### (where Y symbolises Gamma) such that it
     ### becomes A = A + A' A'^T H^T(HA' A'^T H^T + YY^T)^-1 D'
     
