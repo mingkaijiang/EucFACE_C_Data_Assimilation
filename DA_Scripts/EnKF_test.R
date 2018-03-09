@@ -35,7 +35,7 @@ err_type <- initialise_error_type(s, err_type)
 obs <- c()
 
 ### Create the observational matrix, for each state and day
-B <- matrix(0, s$ndims, ndays)
+B <- matrix(NA, s$ndims, ndays)
 
 ### intialize measurement noise matrix
 q_obs <- matrix(rnorm(s$ndims*ndays, 0.0, 1.0), s$ndims, ndays)
@@ -86,10 +86,17 @@ for (i in 1:ndays) {
     
 }
 
+
 ####----  Plotting ----####
-ggplot(ensembleDF) +
-    geom_ribbon(aes(x = Days, ymin=CF-CF_STDEV, 
-                  ymax=CF+CF_STDEV, fill="st.dev"), alpha=1) +
-    geom_line(aes(y = CF, x=Days, color = "black")) +
-    scale_colour_manual("", values = "blue") +
-    scale_fill_manual("", values = "grey")
+
+### prepare obs matrix to df
+obsDF <- as.data.frame(t(B))
+colnames(obsDF) <- c("RA", "AF", "AW", "AR", "LF", "LW", "LR","CF", 
+                     "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP")
+obsDF$Days <- c(1:ndays)
+    
+ggplot() +
+    geom_ribbon(data=ensembleDF, aes(x = Days, ymin=CF-CF_STDEV, 
+                  ymax=CF+CF_STDEV), fill="grey", alpha=1) +
+    geom_line(data=ensembleDF, aes(y = CF, x=Days), color = "black") +
+    geom_point(data=obsDF, aes(y = CF, x=Days), color="red") 
