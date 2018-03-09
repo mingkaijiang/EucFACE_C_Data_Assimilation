@@ -90,13 +90,24 @@ for (i in 1:ndays) {
 ####----  Plotting ----####
 
 ### prepare obs matrix to df
-obsDF <- as.data.frame(t(B))
-colnames(obsDF) <- c("RA", "AF", "AW", "AR", "LF", "LW", "LR","CF", 
-                     "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP")
+obsDF <- matrix(NA, nrow=ndays, ncol=(1+s$ndims*2))
+obsDF <- as.data.frame(obsDF)
+colnames(obsDF) <- c("Days", "RA", "AF", "AW", "AR", "LF", "LW", "LR",
+                          "CF", "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP", 
+                          'RA_STDEV', "AF_STDEV", "AW_STDEV", "AR_STDEV", 
+                          "LF_STDEV", "LW_STDEV", "LR_STDEV", "CF_STDEV", 
+                          "CW_STDEV", "CR_STDEV", "RH1_STDEV", "RH2_STDEV", 
+                          "D_STDEV", "CL_STDEV", "CS_STDEV", "GPP_STDEV")
 obsDF$Days <- c(1:ndays)
-    
+obsDF[,2:(s$ndims+1)] <- as.data.frame(t(B))
+obsDF[,(s$ndims+1):ncol(obsDF)] <- as.data.frame(t(B)*t(err_var_obs))
+
+
+### plotting    
 ggplot() +
     geom_ribbon(data=ensembleDF, aes(x = Days, ymin=CF-CF_STDEV, 
                   ymax=CF+CF_STDEV), fill="grey", alpha=1) +
     geom_line(data=ensembleDF, aes(y = CF, x=Days), color = "black") +
-    geom_point(data=obsDF, aes(y = CF, x=Days), color="red") 
+    geom_point(data=obsDF, aes(y = CF, x=Days), color="red") +
+    geom_errorbar(data=obsDF, aes(ymin=CF-CF_STDEV, ymax=CF+CF_STDEV, x=Days), 
+                  width=0.1, position=position_dodge(0.05), color="brown")
