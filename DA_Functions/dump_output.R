@@ -1,16 +1,15 @@
-dump_output <- function(s, A, screen.option) {
+dump_output <- function(s, A) {
     
-    x = sum(A[s$POS_CF,])
-    x2 = sum(A[s$POS_CF,]^2)
-    
-    ensemble_member_avg = x / s$nrens
-    ensemble_member_stdev_error = sqrt((x2 - (x^2) / s$nrens) / s$nrens)
-    
-    print.out <- c(ensemble_member_avg, ensemble_member_stdev_error)
-    
-    if (screen.option == T) {
-        print(print.out)  
+    out <- matrix(0, ncol=s$ndims*2, nrow=1)
+    out <- as.data.frame(out)
+
+    for (j in 1:s$ndims) {
+        x = sum(A[j,])
+        x2 = sum(A[j,]^2)
+        
+        out[, j] = x / s$nrens
+        out[, s$ndims+j] = sqrt((x2 - (x^2) / s$nrens) / s$nrens)
     }
 
-    return(print.out)
+    return(out)
 }

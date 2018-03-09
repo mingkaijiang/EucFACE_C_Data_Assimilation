@@ -33,8 +33,14 @@ err_type <- initialise_error_type(s, err_type)
 
 ### set up storage df to store the simulation output, with uncertainties
 ndays <- nrow(met)
-ensembleDF <- data.frame(c(1:ndays), NA, NA)
-colnames(ensembleDF) <- c("Days", "ensemble_member_avg", "ensemble_member_stdev_error")
+ensembleDF <- matrix(0, nrow=ndays, ncol=(1+s$ndims*2))
+ensembleDF <- as.data.frame(ensembleDF)
+colnames(ensembleDF) <- c("Days", "RA", "AF", "AW", "AR", "LF", "LW", "LR",
+                          "RH1", "RH2", "D", "GPP", "CF", "CW", "CR", "CL", "CS",
+                          'RA_STDEV', "AF_STDEV", "AW_STDEV", "AR_STDEV", 
+                          "LF_STDEV", "LW_STDEV", "LR_STDEV", "RH1_STDEV", 
+                          "RH2_STDEV", "D_STDEV", "GPP_STDEV", "CF_STDEV", 
+                          "CW_STDEV", "CR_STDEV", "CL_STDEV", "CS_STDEV")
 ensembleDF$Days <- c(1:ndays)
 
 ### Run the model
@@ -54,15 +60,15 @@ for (i in 1:ndays) {
     #     analysis(A, c, obs)
     # }
     
-    # Print to screen outputs and save output
-    ensembleDF[i, 2:3] <- dump_output(s, A, screen.option=F)
+    # Save output
+    ensembleDF[i, 2:(s$ndims*2+1)] <- dump_output(s, A)
     
 }
 
 ### Plotting
 ggplot(ensembleDF) +
-    geom_ribbon(aes(x = Days, ymin=ensemble_member_avg-ensemble_member_stdev_error, 
-                  ymax=ensemble_member_avg+ensemble_member_stdev_error, fill="st.dev"), alpha=1) +
-    geom_line(aes(y = ensemble_member_avg, x=Days, color = "black")) +
+    geom_ribbon(aes(x = Days, ymin=CF-CF_STDEV, 
+                  ymax=CF+CF_STDEV, fill="st.dev"), alpha=1) +
+    geom_line(aes(y = CF, x=Days, color = "black")) +
     scale_colour_manual("", values = "blue") +
     scale_fill_manual("", values = "grey")
