@@ -54,7 +54,6 @@ for (i in 1:ndays) {
     #     analysis(A, c, obs)
     # }
     
-    #test
     # Print to screen outputs and save output
     ensembleDF[i, 2:3] <- dump_output(s, A, screen.option=F)
     
