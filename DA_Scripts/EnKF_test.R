@@ -70,14 +70,14 @@ for (i in 1:ndays) {
     out <- forecast(s, p, met, i, A, err_var,
                     err_type, ens_var, q)
     
-    ## break the list of the forecast model
+    ## split the list of the forecast model
     A <- out$A
     ens_var <- out$ens_var
     q <- out$q
     
-    #a priori state estimate
-    xf <- t(matrix(apply(A, 1, state_transition, k=i), nrow=s$ndims)) + q
-    a[i, ] <- apply(xf, 2, mean)
+    # a priori state estimate
+    #xf <- t(matrix(apply(A, 1, state_transition, k=i), nrow=s$ndims)) + q
+    #a[i, ] <- apply(xf, 2, mean)
     
     
     ## Recalcualte model forecast where observations are avaliable
@@ -90,6 +90,10 @@ for (i in 1:ndays) {
     ensembleDF[i, 2:(s$ndims*2+1)] <- dump_output(s, A)
     
 }
+
+### this is the predicted values
+sim <- t(as.matrix(ensembleDF[,c("RA", "AF", "AW", "AR", "LF", "LW", "LR",
+                               "CF", "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP")]))
 
 
 ####----  Plotting ----####
