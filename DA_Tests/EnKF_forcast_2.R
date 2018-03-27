@@ -74,23 +74,23 @@ FFfunction <- function (A, k){
 
 ##Compute the filtered (a posteriori) state estimates with the EnKF
 #and employ 10 ensemble members in the EnKF 
-enkf1 <- enkf_function(y=dataEx1, mod=ex1, size=10,
+enkf1 <- enkf_function_2(y=dataEx1, mod=ex1, size=10,
               GGfunction=GGfunction, FFfunction=FFfunction)
 
 #As a comparison, increase the size of the ensemble to 20
-enkf2 <- enkf_function(y=dataEx1, mod=ex1, size=20,
+enkf2 <- enkf_function_2(y=dataEx1, mod=ex1, size=20,
               GGfunction=GGfunction, FFfunction=FFfunction)
 
 #And, finally, an EnKF with 100 ensemble members
-enkf3 <- enkf_function(y=dataEx1, mod=ex1, size=100,
+enkf3 <- enkf_function_2(y=dataEx1, mod=ex1, size=100,
               GGfunction=GGfunction, FFfunction=FFfunction)
 
 
 
 #Plot the filtered state estimates at t=5
-plot(1:s$ndims, A[,500], type="l", col=c(gray(level=.5)),
-     ylim=range(c(A[,500], enkf1$m[,501], enkf2$m[,501], enkf3$m[,501])),
-     xlab="Node, i", ylab="Temperature (i)", main="t=5")
+plot(1:s$ndims, A[,500], type="l", col=c(gray(level=.5))) #,
+#     ylim=range(c(A[,500], enkf1$m[,501], enkf2$m[,501], enkf3$m[,501])),
+#     xlab="Node, i", ylab="Temperature (i)", main="t=5")
 lines(1:s$ndims, enkf1$m[,501], lty=2, col="blue", lwd=1)
 lines(1:s$ndims, enkf2$m[,501], lty=2, col="red", lwd=1)
 lines(1:s$ndims, enkf3$m[,501], lty=2, col="darkgreen", lwd=1)

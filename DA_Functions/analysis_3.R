@@ -73,30 +73,13 @@ analysis_3 <- function(A, s, obs, i) {
         }
     }
 
-    # Compute X2 = X1 * D
-    # multiplying matrices
-    # dgemm(’n’,                 # Character indicating that the matrices A and B should not be transposed or conjugate transposed before multiplication.
-    #        ’n’, 
-    #        nrmin,              # M: A: M rows by K columns
-    #        nrens,              # N: B: K rows by N columns
-    #        nrobs,              # K: C: M rows by N columns
-    #        1.0,                # Real value used to scale the product of matrices A and B.
-    #        X1,                 # Array used to store matrix A.
-    #        nrmin,              # Leading dimension of array A, or the number of elements between successive columns (for column major storage) in memory. In the case of this exercise the leading dimension is the same as the number of rows.
-    #        D,                  # Array used to store matrix B.
-    #        nrobs,              # Leading dimension of array B, 
-    #        0.0,                # Real value used to scale matrix C.
-    #        X2,                 # Array used to store matrix C
-    #        nrmin)              # Leading dimension of array C
     X2 <- X1 %*% D
 
     # Compute X3 = U * X2
-    # dgemm(’n’, ’n’, nrobs, nrens, nrmin, 1.0, U, nrobs, X2, nrmin, 0.0, X3, nrobs)
     X3 <- U %*% X2
     
     # Compute final analysis
     if(2 * ndim * nrobs > nrens * (nrobs+ndim)) {
-        # dgemm(’t’, ’n’, nrens, nrens, nrobs, 1:0, S, nrobs, X3, nrobs, 0.0, X4, nrens)
         X4 <- S %*% X3
         for (i in 1:s$nrens) {
             X4[i,i] = X4[i,i] + 1.0
@@ -105,9 +88,7 @@ analysis_3 <- function(A, s, obs, i) {
         iblkmax = min(s$ndim, 200)
         multa(A, X4, ndim, nrens, iblkmax)
     } else {
-        #dgemm(’n’, ’t’, ndim, nrobs, nrens, 1.0, A, ndim, S, nrobs, 0.0, Reps, ndim)
         Reps <- A %*% S
-        #dgemm(’n’, ’n’, ndim, nrens, nrobs, 1.0, Reps, ndim, X3, nrobs, 1.0, A, ndim)
         A <- Reps %*% X3
     }
 }
@@ -118,7 +99,6 @@ multa <- function(A, X, ndim, nrens, iblkmax) {
     for (ia in seq(1, ndim, iblkmax)) {
         ib = min(ia + iblkmax - 1, ndim)
         v(1:(ib - ia + 1), 1:nrens) = A(ia:ib, 1:nrens)
-        #dgemm(’n’, ’n’, ib - ia + 1, nrens, nrens, 1.0, v(1,1), iblkmax, X(1,1), nrens,0.0, A(ia, 1), ndim)
         A[ia, 1] <- v[1,1] %*% X[1,1]
     }
 
