@@ -36,8 +36,8 @@ for (i in 2:ndays) {
     A[, i] <- A[,i-1] + (A_tmp%*%A[,i-1]) + rnorm(s$ndims, 0, sqrt(wk))
 }
 
-A <- t(as.matrix(ensembleDF[,c("RA", "AF", "AW", "AR", "LF", "LW", "LR",
-                                "CF", "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP")]))
+#A <- t(as.matrix(ensembleDF[,c("RA", "AF", "AW", "AR", "LF", "LW", "LR",
+#                                "CF", "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP")]))
 
 ##MEASUREMENTS
 np <- length(c(1,3,5,7,9)) #number of nodes

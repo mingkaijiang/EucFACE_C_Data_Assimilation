@@ -63,6 +63,12 @@ colnames(ensembleDF) <- c("Days", "RA", "AF", "AW", "AR", "LF", "LW", "LR",
                           "D_STDEV", "CL_STDEV", "CS_STDEV", "GPP_STDEV")
 ensembleDF$Days <- c(1:ndays)
 
+FFfunction <- function (A, k){
+    A[c(1:16)]}
+
+a <- matrix(0, ncol = ncol(B), nrow = nrow(A))
+f <- matrix(0, ncol = ncol(B), nrow = nrow(B))
+
 ####---- Run the model ----####
 for (i in 1:ndays) {
     
@@ -75,12 +81,29 @@ for (i in 1:ndays) {
     ens_var <- out$ens_var
     q <- out$q
     
-    ## Recalcualte model forecast where observations are avaliable
-    ## need to consider obs at timestep i
-    ## the R code does consider all timesteps, how to recouncil the difference is the key!
-    # if (s$nrobs > 0) {
-    #     analysis(A, D, B[,i], S, s)
-    # }
+    a[,i] <- apply(A, 1, mean)
+        
+    # predicted measurement
+    yp <- t(matrix(apply(A, 1, FFfunction, k=i), nrow=nrow(B)))
+    f[,i] <- apply(yp, 1, mean)
+    
+    #covariance of predicted measurement
+    Qy <- 1/(s$nrens-1) * tcrossprod(t(yp)-f[,i]) + diag(q_obs[,i])
+    
+    #cross covariance between a priori state estimate and predicted measurement
+    Qxy <- 1/(s$nrens-1) * tcrossprod(t(A)-a[,i], t(yp)-f[,i])
+    
+    ### a posteriori estimates (analysis step)
+    # Kalman gain
+    Kk <- crossprod(t(Qxy), solve(Qy, tol=1e-30))
+    
+    # a posteriori state estimate
+    yk <- B[,i] # + t(vks)
+    xa <- t(t(A) + crossprod(t(Kk), as.matrix(yk-t(yp))))
+    A[,i + 1] <- apply(xa, 1, mean)
+    
+    # extract a posteriori error variance
+    ens_var <- diag(1/(s$nrens-1) * tcrossprod(t(xa)-A[,i + 1]))
     
     # Save output
     ensembleDF[i, 2:(s$ndims*2+1)] <- dump_output(s, A)
