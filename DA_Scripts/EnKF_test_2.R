@@ -1,3 +1,7 @@
+#### This version of model constructs the enKF based on ideas of the R code
+#### i.e. no ensemble at the start
+#### Currently error is in noise estimates, as we return NANs. 
+
 
 ####---- Clear the console ----####
 rm(list=ls(all=TRUE))
