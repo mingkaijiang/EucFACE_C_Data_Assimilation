@@ -75,15 +75,10 @@ for (i in 1:ndays) {
     ens_var <- out$ens_var
     q <- out$q
     
-    # a priori state estimate
-    #xf <- t(matrix(apply(A, 1, state_transition, k=i), nrow=s$ndims)) + q
-    #a[i, ] <- apply(xf, 2, mean)
-    
-    
     ## Recalcualte model forecast where observations are avaliable
     ## need to consider obs at timestep i
     # if (s$nrobs > 0) {
-    #     analysis(A, s, obs, i)
+    #     analysis(A, D, B[,i], S, s)
     # }
     
     # Save output
