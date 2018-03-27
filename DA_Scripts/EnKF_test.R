@@ -31,9 +31,6 @@ err_var <- initialise_error_variance(s, err_var)
 err_type <- initialise_error_type(s, err_type)
 
 ####----  Set up the observation stuffs ----####
-### prepare observation data matrix
-obs <- c()
-
 ### Create the observational matrix, for each state and day
 B <- matrix(NA, s$ndims, ndays)
 

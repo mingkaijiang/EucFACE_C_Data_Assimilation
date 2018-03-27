@@ -1,7 +1,5 @@
 ####----  source all the input variables and functions ----####
 source("include/prepare.R")
-library(mvtnorm)
-source("DA_Tests/enkf_function_2.R")
 
 ####----  Set up the model stuffs ----####
 ### read in met data
@@ -13,31 +11,28 @@ p <- setup_p_initial_conditions()
 s <- setup_s_initial_conditions()
 
 ##TRUE STATES
-
 # Generate the true states T(x,t).
 dt <- 1                                                  # time step size used in the explicit method
-tt <- ndays                                              # upper bound of time window (that is, max number of time steps)
-st <- seq(1, tt, by=dt)                                  # lower time bounds of the integration intervals
+st <- seq(1, ndays, by=dt)                                  # lower time bounds of the integration intervals
 ns <- length(st)                                         # number of integrations
 nc <- s$ndims                                            # number of nodes
-A <- matrix(0, ncol=ns, nrow=nc)                         # specify matrix for states
-dx <- 1                                                  # spacing between nodes
-A[,1] <- c(200, rep(100, nc-2), 150) + rnorm(nc, 0, 1)   # initial conditions (at t=0)
+A <- matrix(0, ncol=ndays, nrow=s$ndims)                         # specify matrix for states
+A[,1] <- c(200, rep(100, s$ndims-2), 150) + rnorm(s$ndims, 0, 1)   # initial conditions (at t=0)
 
 #Specify noises (variances)
 wk <- 0.001                                              # process noise
 vk <- 1                                                  # measurement noise
 
 #State transition matrix
-A_tmp <- matrix(0, ncol=nc, nrow=nc)
+A_tmp <- matrix(0, ncol=s$ndims, nrow=s$ndims)
 
 #Entries of the interior nodes in the transition matrix
-for(i in 2:(nc-1)) {
+for(i in 2:(s$ndims-1)) {
     A_tmp[i, (i-1):(i+1)] <- c(1, -2, 1)
 }
 
 #Control input matrix
-B <- matrix(0, ncol=2, nrow=nc)
+B <- matrix(0, ncol=2, nrow=s$ndims)
 B[1, 1] <- B[16, 2] <- 1                                 
 
 #Heat source
@@ -48,11 +43,11 @@ hs <- c(0, c(rep(1, timeHS), rep(0, length(st)-timeHS)))
 for (i in 2:ns) {
     #states
     A[, i] <- A[, i-1] + (A_tmp%*%A[, i-1])*dt +
-        B%*%c(2*hs[i], .5*hs[i]) + rnorm(nc, 0, sqrt(wk))
+        B%*%c(2*hs[i], .5*hs[i]) + rnorm(s$ndims, 0, sqrt(wk))
 }
 
-A <- t(as.matrix(ensembleDF[,c("RA", "AF", "AW", "AR", "LF", "LW", "LR",
-                                "CF", "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP")]))
+#A <- t(as.matrix(ensembleDF[,c("RA", "AF", "AW", "AR", "LF", "LW", "LR",
+#                                "CF", "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP")]))
 
 ##MEASUREMENTS
 
@@ -87,11 +82,11 @@ ex1 <- list(m0=A[,1], # initial state estimates
             #this matrix reflects the uncertainty in our initial state estimates
             #you may change the values in this matrix and see how they influence
             #the behavior of the Kalman filter
-            C0=diag(rep(1e+1, nc)),
+            C0=diag(rep(1e+1, s$ndims)),
             #measurement noise
-            V=diag(rep(vk, nc)),
+            V=diag(rep(vk, s$ndims)),
             #process noise
-            W=diag(rep(wk, nc)))
+            W=diag(rep(wk, s$ndims)))
 
 #Specify the state transition function:
 #WARNING: always use arguments x and k when specifying the GGfunction
@@ -120,12 +115,12 @@ enkf3 <- enkf_function(y=dataEx1, mod=ex1, size=100,
 
 
 #Plot the filtered state estimates at t=5
-plot(1:nc, x[500,], type="l", col=c(gray(level=.5)),
-     ylim=range(c(x[500,], enkf1$m[501,], enkf2$m[501,], enkf3$m[501,])),
+plot(1:s$ndims, A[,500], type="l", col=c(gray(level=.5)),
+     ylim=range(c(A[,500], enkf1$m[,501], enkf2$m[,501], enkf3$m[,501])),
      xlab="Node, i", ylab="Temperature (i)", main="t=5")
-lines(1:nc, enkf1$m[501,], lty=2, col="blue", lwd=1)
-lines(1:nc, enkf2$m[501,], lty=2, col="red", lwd=1)
-lines(1:nc, enkf3$m[501,], lty=2, col="darkgreen", lwd=1)
+lines(1:s$ndims, enkf1$m[,501], lty=2, col="blue", lwd=1)
+lines(1:s$ndims, enkf2$m[,501], lty=2, col="red", lwd=1)
+lines(1:s$ndims, enkf3$m[,501], lty=2, col="darkgreen", lwd=1)
 legend("topright", lty=c(1, 2, 2, 2),
        col=c(gray(level=.5), "blue", "red", "darkgreen"),
        legend=c("true state", "EnKf with 10 members",
@@ -133,14 +128,14 @@ legend("topright", lty=c(1, 2, 2, 2),
        bty="n", y.intersp=1.2, cex=.7)
 
 #Error plot
-e1 <- sapply(1:(nrow(x)-10), function (i) mean((x[i,]-enkf1$m[i+1,])^2))
-e2 <- sapply(1:(nrow(x)-10), function (i) mean((x[i,]-enkf2$m[i+1,])^2))
-e3 <- sapply(1:(nrow(x)-10), function (i) mean((x[i,]-enkf3$m[i+1,])^2))
+e1 <- sapply(1:(nrow(A)-10), function (i) mean((A[,i]-enkf1$m[,i+1])^2))
+e2 <- sapply(1:(nrow(A)-10), function (i) mean((A[,i]-enkf2$m[,i+1])^2))
+e3 <- sapply(1:(nrow(A)-10), function (i) mean((A[,i]-enkf3$m[,i+1])^2))
 rangeError <- range(cbind(e1, e2, e3))
-plot(1:(nrow(x)-10), e1, type="l", lty=1, col="blue", log="y",
+plot(1:(nrow(A)-10), e1, type="l", lty=1, col="blue", log="y",
      ylim=rangeError, ylab="Mean Squared Error", xlab="Time index, k")
-lines(1:(nrow(x)-10), e2, lty=1, col="red")
-lines(1:(nrow(x)-10), e3, lty=1, col="darkgreen")
+lines(1:(nrow(A)-10), e2, lty=1, col="red")
+lines(1:(nrow(A)-10), e3, lty=1, col="darkgreen")
 legend("topright", lty=c(2, 2, 2),
        col=c("blue", "red", "darkgreen"),
        legend=c("EnKf with 10 members",
