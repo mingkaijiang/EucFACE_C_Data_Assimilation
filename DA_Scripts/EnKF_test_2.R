@@ -126,15 +126,15 @@ FFfunction <- function (A, k){
 
 ##Compute the filtered (a posteriori) state estimates with the EnKF
 #and employ 10 ensemble members in the EnKF 
-enkf1 <- enkf_function(y=B, mod=ex1, size=10,
+enkf1 <- enkf_function_2(y=B, mod=ex1, size=10,
                        GGfunction=GGfunction, FFfunction=FFfunction)
 
 #As a comparison, increase the size of the ensemble to 20
-enkf2 <- enkf_function(y=B, mod=ex1, size=20,
+enkf2 <- enkf_function_2(y=B, mod=ex1, size=20,
                        GGfunction=GGfunction, FFfunction=FFfunction)
 
 #And, finally, an EnKF with 100 ensemble members
-enkf3 <- enkf_function(y=B, mod=ex1, size=100,
+enkf3 <- enkf_function_2(y=B, mod=ex1, size=100,
                        GGfunction=GGfunction, FFfunction=FFfunction)
 
 

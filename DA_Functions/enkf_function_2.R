@@ -1,4 +1,4 @@
-enkf_function <- function(y, mod, GGfunction, FFfunction, size=50,
+enkf_function_2 <- function(y, mod, GGfunction, FFfunction, size=50,
                        logLik=FALSE, simplify=FALSE) {
     
     mod1 <- mod
@@ -25,17 +25,21 @@ enkf_function <- function(y, mod, GGfunction, FFfunction, size=50,
             
             ##time update (forecast step)
             wks <- rmvnorm(n=size, sigma=as.matrix(mod$W))
+            
             #a priori state estimate
             xf <- t(matrix(apply(xa, 1, GGfunction, k=i), nrow=p)) + wks
             a[,i] <- apply(xf, 2, mean)
+            
             #covariance of a priori state estimate:
             #1/(size-1) * tcrossprod(t(xf)-a[i, ])
             
             ##measurement update
             vks <- rmvnorm(n=size, sigma=as.matrix(mod$V))
+            
             #predicted measurement
             yp <- t(matrix(apply(xf, 1, FFfunction, k=i), nrow=ym))
             f[,i] <- apply(yp, 2, mean)
+            
             #covariance of predicted measurement
             Qy <- 1/(size-1) * tcrossprod(t(yp)-f[,i]) + mod$V
             
@@ -50,6 +54,7 @@ enkf_function <- function(y, mod, GGfunction, FFfunction, size=50,
             yk <- y[,i] + t(vks)
             xa <- t(t(xf) + crossprod(t(Kk), as.matrix(yk-t(yp))))
             m[,i + 1] <- apply(xa, 2, mean)
+            
             #extract a posteriori error variance
             C[[i + 1]] <- diag(1/(size-1) * tcrossprod(t(xa)-m[,i + 1]))
             
@@ -68,21 +73,23 @@ enkf_function <- function(y, mod, GGfunction, FFfunction, size=50,
                 #a priori state estimate
                 xf <- t(matrix(apply(xa, 1, GGfunction, k=i), nrow=p)) + wks
                 a[,i] <- apply(xf, 2, mean)
+                
                 #covariance of a priori state estimate
                 Qx <- 1/(size-1) * tcrossprod(t(xf)-a[,i])
                 
                 ##measurement update
                 vks <- rmvnorm(n=size, sigma=as.matrix(mod$V))
+                
                 #predicted measurement
                 yp <- t(matrix(apply(xf, 1, FFfunction, k=i), nrow=ym))
                 f[,i] <- apply(yp, 2, mean)
                 
                 ##a posteriori estimates
-                
                 xa <- xf
                 
                 #a posteriori state estimate
                 m[,i + 1] <- a[,i]
+                
                 #extract a posteriori error variance
                 C[[i + 1]] <- diag(Qx)
             }
@@ -92,17 +99,21 @@ enkf_function <- function(y, mod, GGfunction, FFfunction, size=50,
                 
                 ##time update (forecast step)
                 wks <- rmvnorm(n=size, sigma=as.matrix(mod$W))
+                
                 #a priori state estimate
                 xf <- t(matrix(apply(xa, 1, GGfunction, k=i), nrow=p)) + wks
                 a[,i] <- apply(xf, 2, mean)
+                
                 #covariance of a priori state estimate:
                 #1/(size-1) * tcrossprod(t(xf)-a[i, ])
                 
                 ##measurement update
                 vks <- rmvnorm(n=size, sigma=as.matrix(mod$V))
+                
                 #predicted measurement
                 yp <- t(matrix(apply(xf, 1, FFfunction, k=i), nrow=ym))
                 f[,i] <- apply(yp, 2, mean)
+                
                 #covariance of predicted measurement
                 Qy <- 1/(size-1) * tcrossprod(t(yp[good,])-f[good,i]) + mod$V[good, good]
                 
@@ -113,10 +124,12 @@ enkf_function <- function(y, mod, GGfunction, FFfunction, size=50,
                 
                 #Kalman gain
                 Kk <- crossprod(t(Qxy), solve(Qy, tol=1e-30))
+                
                 #a posteriori state estimate
                 yk <- y[,i] + t(vks)
                 xa <- t(t(xf) + crossprod(t(Kk), as.matrix(yk[,good]-t(yp)[,good])))
                 m[,i + 1] <- apply(xa, 2, mean)
+                
                 #extract a posteriori error variance
                 C[[i + 1]] <- diag(1/(size-1) * tcrossprod(t(xa)-m[,i + 1]))
                 
