@@ -60,23 +60,23 @@ enkf_function <- function(y, mod, GGfunction, FFfunction, size=50,
     
     mod1 <- mod
     y <- as.matrix(y)
-    ym <- ncol(y)
+    ym <- nrow(y)
     yAttr <- attributes(y)
     p <- length(mod$m0)
     
-    m <- rbind(mod$m0, matrix(0, nrow = nrow(y), ncol = length(mod$m0)))
-    a <- matrix(0, nrow = nrow(y), ncol = length(mod$m0))
-    f <- matrix(0, nrow = nrow(y), ncol = ncol(y))
-    C <- vector(1 + nrow(y), mode = "list")
+    m <- cbind(mod$m0, matrix(0, ncol = ncol(y), nrow = length(mod$m0)))
+    a <- matrix(0, ncol = ncol(y), nrow = length(mod$m0))
+    f <- matrix(0, ncol = ncol(y), nrow = nrow(y))
+    C <- vector(1 + ncol(y), mode = "list")
     ll <- 0
     
     #extract variances of a posteriori state estimates at t=0
     C[[1]] <- diag(mod$C0)
     
     #generate ensemble at t=0
-    xa <- rmvnorm(n=size, mean=m[1,], sigma=as.matrix(mod$C0))
+    xa <- rmvnorm(n=size, mean=m[,1], sigma=as.matrix(mod$C0))
     
-    for (i in seq(length = nrow(y))) {
+    for (i in seq(length = ncol(y))) {
         
         if (!any(whereNA <- is.na(y[i, ]))) {
             

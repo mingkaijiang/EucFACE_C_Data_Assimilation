@@ -81,48 +81,40 @@ for (i in 1:510) {
 dataPred1 <- dataEx1[,501:510]
 dataEx1 <- dataEx1[,1:500]
 
-
-
 ##FORECASTING WITH THE ENSEMBLE KALMAN FILTER (EnKF)
-
-#Dynamic model: specifying 100 temperature states.
-#Note that you may change the specified initial state estimates (at t=0)
-#below for the 100 states and see how such changes influence the behavior
-#of the ensemble Kalman filter.
-ex1 <- list(m0=c(200, rep(100, nc-2), 150), # initial state estimates
+ex1 <- list(m0=A[,1], # initial state estimates
             #error covariances of the initial state estimates:
             #this matrix reflects the uncertainty in our initial state estimates
             #you may change the values in this matrix and see how they influence
             #the behavior of the Kalman filter
             C0=diag(rep(1e+1, nc)),
             #measurement noise
-            V=diag(rep(vk, 9)),
+            V=diag(rep(vk, nc)),
             #process noise
             W=diag(rep(wk, nc)))
 
 #Specify the state transition function:
 #WARNING: always use arguments x and k when specifying the GGfunction
-GGfunction <- function (x, k){
-    x + (A%*%x)*dt + B%*%c(2*hs[k+1], .5*hs[k+1])}
+GGfunction <- function (A, k){
+    A + (A_tmp%*%A)*dt + B%*%c(2*hs[k+1], .5*hs[k+1])}
 
 #Specify the observation/measurement function:
 #WARNING: always use arguments x and k when specifying the FFfunction
-FFfunction <- function (x, k){
-    x[seq(10, 90, 10)]}
-
+FFfunction <- function (A, k){
+    A[1:16]}
 
 
 ##Compute the filtered (a posteriori) state estimates with the EnKF
 #and employ 10 ensemble members in the EnKF 
-enkf1 <- EnKF(y=dataEx1, mod=ex1, size=10,
+enkf1 <- enkf_function(y=dataEx1, mod=ex1, size=10,
               GGfunction=GGfunction, FFfunction=FFfunction)
 
 #As a comparison, increase the size of the ensemble to 20
-enkf2 <- EnKF(y=dataEx1, mod=ex1, size=20,
+enkf2 <- enkf_function(y=dataEx1, mod=ex1, size=20,
               GGfunction=GGfunction, FFfunction=FFfunction)
 
 #And, finally, an EnKF with 100 ensemble members
-enkf3 <- EnKF(y=dataEx1, mod=ex1, size=100,
+enkf3 <- enkf_function(y=dataEx1, mod=ex1, size=100,
               GGfunction=GGfunction, FFfunction=FFfunction)
 
 
