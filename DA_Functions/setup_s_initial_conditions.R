@@ -3,7 +3,7 @@ setup_s_initial_conditions <- function() {
     s <- c()
     
     ### Number of observations
-    s$nrobs = 10   
+    s$nrobs = 16   
     
     ### Dimension of model state
     s$ndims = 16  

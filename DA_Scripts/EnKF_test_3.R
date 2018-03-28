@@ -85,30 +85,12 @@ for (i in 1:ndays) {
     ens_var <- out$ens_var
     q <- out$q
     
-    ## calculate the ensemble mean at each timestep
-    A_mean[,i] <- apply(A, 1, mean)
-        
-    ## predicted measurement
-    A_pred <- t(matrix(apply(A, 1, FFfunction, k=i), nrow=nrow(B)))
-    B_mean[,i] <- apply(A_pred, 1, mean)
+    out2 <- analysis_3(A, s, p, B, i, 
+                       err_var, err_type, 
+                       err_var_obs, err_var_obs, 
+                       ens_var, q,
+                       ens_var_obs, q_obs)
     
-    ## covariance of predicted measurement
-    Qy <- 1/(s$nrens-1) * tcrossprod(t(A_pred)-B_mean[,i]) + diag(ens_var)
-    
-    ## cross covariance between a priori state estimate and predicted measurement
-    Qxy <- 1/(s$nrens-1) * tcrossprod(t(A)-A_mean[,i], t(A_pred)-B_mean[,i])
-    
-    ## a posteriori estimates (analysis step)
-    # Kalman gain
-    Kk <- crossprod(t(Qxy), solve(Qy, tol=1e-30))
-    
-    # a posteriori state estimate
-    yk <- B[,i] # + t(vks)
-    xa <- t(t(A) + crossprod(t(Kk), as.matrix(yk-t(A_pred))))
-    A[,i + 1] <- apply(xa, 1, mean)
-    
-    # extract a posteriori error variance
-    ens_var <- diag(1/(s$nrens-1) * tcrossprod(t(xa)-A[,i + 1]))
     
     ## Save output
     ensembleDF[i, 2:(s$ndims*2+1)] <- dump_output(s, A)
