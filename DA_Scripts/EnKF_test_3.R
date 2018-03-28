@@ -64,14 +64,14 @@ colnames(ensembleDF) <- c("Days", "RA", "AF", "AW", "AR", "LF", "LW", "LR",
 ensembleDF$Days <- c(1:ndays)
 
 ### Specify the observation/measurement function
-FFfunction <- function (A, k){
-    A[c(1:16)]}
+#FFfunction <- function (A, k){
+#    A[c(1:16)]}
 
 ### predicted ensemble mean for each variable at each time step
-A_mean <- matrix(0, ncol = ncol(A), nrow = nrow(A))
+#A_mean <- matrix(0, ncol = ncol(A), nrow = nrow(A))
 
 ### predicted observation mean
-B_mean <- matrix(0, ncol = ncol(B), nrow = nrow(B))
+#B_mean <- matrix(0, ncol = ncol(B), nrow = nrow(B))
 
 ####---- Run the model ----####
 for (i in 1:ndays) {
@@ -87,10 +87,11 @@ for (i in 1:ndays) {
     
     out2 <- analysis_3(A, s, p, B, i, 
                        err_var, err_type, 
-                       err_var_obs, err_var_obs, 
+                       err_var_obs, err_type_obs, 
                        ens_var, q,
                        ens_var_obs, q_obs)
     
+    A <- out2$A
     
     ## Save output
     ensembleDF[i, 2:(s$ndims*2+1)] <- dump_output(s, A)
@@ -121,7 +122,7 @@ obsDF[,(s$ndims+1):ncol(obsDF)] <- as.data.frame(t(B)*t(err_var_obs))
 ggplot() +
     geom_ribbon(data=ensembleDF, aes(x = Days, ymin=CF-CF_STDEV, 
                   ymax=CF+CF_STDEV), fill="grey", alpha=1) +
-    geom_line(data=ensembleDF, aes(y = CF, x=Days), color = "black") +
-    geom_point(data=obsDF, aes(y = CF, x=Days), color="red") +
-    geom_errorbar(data=obsDF, aes(ymin=CF-CF_STDEV, ymax=CF+CF_STDEV, x=Days), 
-                  width=0.1, position=position_dodge(0.05), color="brown")
+    geom_line(data=ensembleDF, aes(y = CF, x=Days), color = "black") #+
+#    geom_point(data=obsDF, aes(y = CF, x=Days), color="red") # +
+#    geom_errorbar(data=obsDF, aes(ymin=CF-CF_STDEV, ymax=CF+CF_STDEV, x=Days), 
+#                  width=0.1, position=position_dodge(0.05), color="brown", alpha=1)

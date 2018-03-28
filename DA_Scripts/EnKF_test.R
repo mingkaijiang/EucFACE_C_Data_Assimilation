@@ -31,22 +31,23 @@ err_var <- initialise_error_variance(s, err_var)
 err_type <- initialise_error_type(s, err_type)
 
 ####----  Set up the observation stuffs ----####
+obs <- c()
 ### Create the observational matrix, for each state and day
-B <- matrix(NA, s$ndims, ndays)
-
-### intialize measurement noise matrix
-q_obs <- matrix(rnorm(s$ndims*ndays, 0.0, 1.0), s$ndims, ndays)
-    
-### initialize measurement matrix
-B <- initialise_observation(p, s, B)
-
-### initialize measurement error variance and type
-err_var_obs <- matrix(0, s$ndims, ndays)
-err_type_obs <- rep(0, s$ndims)
-ens_var_obs <- matrix(0, s$ndims, ndays)
-
-err_var_obs <- initialise_obs_error_variance(s, err_var_obs)
-err_type_obs <- initialise_obs_error_type(s, err_type_obs)
+#B <- matrix(NA, s$ndims, ndays)
+#
+#### intialize measurement noise matrix
+#q_obs <- matrix(rnorm(s$ndims*ndays, 0.0, 1.0), s$ndims, ndays)
+#    
+#### initialize measurement matrix
+#B <- initialise_observation(p, s, B)
+#
+#### initialize measurement error variance and type
+#err_var_obs <- matrix(0, s$ndims, ndays)
+#err_type_obs <- rep(0, s$ndims)
+#ens_var_obs <- matrix(0, s$ndims, ndays)
+#
+#err_var_obs <- initialise_obs_error_variance(s, err_var_obs)
+#err_type_obs <- initialise_obs_error_type(s, err_type_obs)
 
 
 ####----  set up storage df to store the simulation output, with uncertainties ----####
@@ -75,7 +76,7 @@ for (i in 1:ndays) {
     ## Recalcualte model forecast where observations are avaliable
     ## need to consider obs at timestep i
     # if (s$nrobs > 0) {
-    #     analysis(A, D, B[,i], S, s)
+    #     analysis(A, s, obs)
     # }
     
     # Save output
