@@ -34,10 +34,10 @@ err_var <- initialise_error_variance(s, err_var)
 err_type <- initialise_error_type(s, err_type)
 
 ####----  Set up the observation stuffs ----####
-obsDF <- read.csv("obs.csv")
-n <- ncol(obsDF)
-obs <- as.matrix(obsDF[,2:n])
-nrobs <- initialise_nrobs(obs)
+obsDF <- read.csv("obs_cf_1.csv", header=F)
+nrobs <- ncol(obsDF)-1
+obs <- as.matrix(obsDF[,2:ncol(obsDF)])
+#nrobs <- initialise_nrobs(obs)
 
 
 ### Create the observational matrix, for each state and day
@@ -87,9 +87,9 @@ for (i in 1:ndays) {
                     err_type, ens_var, q)
     
     ## split the list of the forecast model
-    A <- out$A
-    ens_var <- out$ens_var
-    q <- out$q
+    A <- out$A                 # model prediction ensemble member
+    ens_var <- out$ens_var     # model variance
+    q <- out$q                 # model error
     
     #out2 <- analysis_3(A, s, p, B, i, 
     #                   err_var, err_type, 

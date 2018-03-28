@@ -31,14 +31,14 @@ forecast <- function(s, p, met, i, A, err_var, err_type, ens_var, q) {
         A_mean[j] <- sum(A[j,]) / s$nrens
     }
 
-    # add the noise model into the ensemble
+    # add the noise model into the ensemble, eq 43
     for (j in 1:s$ndims) {
         for (k in 1:s$nrens) {
             A[j,k] <- A[j,k] + sqrt(p$delta_t) * p$rho * sqrt(ens_var[j]) * q[j,k]
         }
     }
         
-    # simulate the time evolution of model errors
+    # simulate the time evolution of model errors, eq 43
     for (j in 1:s$ndims) {
         for (k in 1:s$nrens) {
             q_previous_time_step <- q[j,k]
