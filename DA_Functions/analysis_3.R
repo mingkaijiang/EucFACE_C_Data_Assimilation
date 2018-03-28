@@ -48,7 +48,7 @@ analysis_3 <- function(A, s, p, obs, i,
     
     
     ## calculate A_mean: why nrobs?
-    A_mean <- 
+    #A_mean <- 
 
     ## assign measurement operator matrix
     #for (j in 1:s$nrobs) {               # need to create number of observations
@@ -82,7 +82,7 @@ analysis_3 <- function(A, s, p, obs, i,
     tmp1 <- tmp1 + R           # nrobs * nrobs
     
     ## compuete Pf.H^T
-    xx <- mod_err %*% t(H)m    # ndims * nrobs
+    xx <- mod_err %*% t(H)    # ndims * nrobs
     
     ## Pf.H^T * (H.Pf.H^T + R)^-1   Kalman gain matrix: ndims * nrobs
     K <- xx %*% tmp1^-1        # ndims * nrobs

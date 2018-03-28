@@ -34,22 +34,28 @@ err_var <- initialise_error_variance(s, err_var)
 err_type <- initialise_error_type(s, err_type)
 
 ####----  Set up the observation stuffs ----####
+obsDF <- read.csv("obs.csv")
+n <- ncol(obsDF)
+obs <- as.matrix(obsDF[,2:n])
+nrobs <- initialise_nrobs(obs)
+
+
 ### Create the observational matrix, for each state and day
-B <- matrix(NA, s$ndims, ndays)
-
-### intialize measurement noise matrix
-q_obs <- matrix(rnorm(s$ndims*ndays, 0.0, 1.0), s$ndims, ndays)
-    
-### initialize measurement matrix
-B <- initialise_observation(p, s, B)
-
-### initialize measurement error variance and type
-err_var_obs <- matrix(0, s$ndims, ndays)
-err_type_obs <- rep(0, s$ndims)
-ens_var_obs <- matrix(0, s$ndims, ndays)
-
-err_var_obs <- initialise_obs_error_variance(s, err_var_obs)
-err_type_obs <- initialise_obs_error_type(s, err_type_obs)
+#B <- matrix(NA, s$ndims, ndays)
+#
+#### intialize measurement noise matrix
+#q_obs <- matrix(rnorm(s$ndims*ndays, 0.0, 1.0), s$ndims, ndays)
+#    
+#### initialize measurement matrix
+#B <- initialise_observation(p, s, B)
+#
+#### initialize measurement error variance and type
+#err_var_obs <- matrix(0, s$ndims, ndays)
+#err_type_obs <- rep(0, s$ndims)
+#ens_var_obs <- matrix(0, s$ndims, ndays)
+#
+#err_var_obs <- initialise_obs_error_variance(s, err_var_obs)
+#err_type_obs <- initialise_obs_error_type(s, err_type_obs)
 
 
 ####----  set up storage df to store the simulation output, with uncertainties ----####
@@ -85,18 +91,20 @@ for (i in 1:ndays) {
     ens_var <- out$ens_var
     q <- out$q
     
-    out2 <- analysis_3(A, s, p, B, i, 
-                       err_var, err_type, 
-                       err_var_obs, err_type_obs, 
-                       ens_var, q,
-                       ens_var_obs, q_obs)
+    #out2 <- analysis_3(A, s, p, B, i, 
+    #                   err_var, err_type, 
+    #                   err_var_obs, err_type_obs, 
+    #                   ens_var, q,
+    #                   ens_var_obs, q_obs)
     
-    A <- out2$A
+    #A <- out2$A
     
     ## Save output
     ensembleDF[i, 2:(s$ndims*2+1)] <- dump_output(s, A)
     
 }
+
+#write.csv(ensembleDF, "obs.csv", row.names=F)
 
 ### this is the predicted values
 sim <- t(as.matrix(ensembleDF[,c("RA", "AF", "AW", "AR", "LF", "LW", "LR",
