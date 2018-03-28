@@ -38,58 +38,83 @@ analysis_3 <- function(A, s, p, obs, i,
     HA_mean = rep(0, nrobs)
     A_mean = rep(0, s$ndims)
     
-    ## Generate the H matrix
+    ## Generate the H matrix: gsl_matrix_set(H, j, k, (o + j)->obsop[k]);
     for (j in 1:nrobs) {
         for (k in 1:ndims) {
-            H[j,k] <- 
+            H[j,k] <- obs[k,j]   # This should be a pointer operator function
         }
     }
 
+    ## Compute HA
+    HA <- H %*% A
     
-    # calculate A_mean: the ensemble mean that stores in each column of A_mean
-    A_mean <- A %*% N1
+    ## Calculate observation uncertainty (defined as gamma in Eversen 2003)
+    for (j in 1:nrobs) {
+        mean.value <- 0
+        sum.value <- 0
+        for (k in 1:s$nrens) {
+            if ((o + i)->err_type_obs[j] == 0) {
+                tmp = gsl_ran_gaussian(rand_num_gen, (o + i)->stdev)
+            } else {
+                tmp = gsl_ran_gaussian(rand_num_gen, (o + i)->stdev * fabs((o + i)->val))
+            }
+            sum.value = sum.value + tmp
+            E[j,k] <- tmp
+        }
+        mean.value = sum.value / s$nrens
+        E_mean[j] <- mean.value
+    }
     
-    # # alternative, result is the same for A_dash
-    #A_mean <- rep(0, s$ndims)  
-    #for (k in 1:s$ndims) {
-    #    A_mean[k] <- mean(A[k,])
-    #}
+    ## Compute the innovations, D', where D' = D - HA. eqn 53 evenson 2003 
+    for (j in 1:nrobs) {
+        mean.value = 0
+        sum.value  = 0
+        for (k in 1:s$nrens) {
+            ## Add the observation uncertainty to observation (eqn 48 Evenson 2003) before taking HA away from it */
+            tmp = E[j,k] + (o + j)->val - HA[j,k]
+            sum.value = sum.value + tmp
+            D[j,k] <- tmp
+        }
+        mean.value = sum.value / s$nrens
+        D_mean[j] <- mean.value
+    }
     
-    # Ensemble perturbation matrix
-    A_dash <- A - A_mean
+    ### Calculate HA' by taking mean_HA from HA. 
+    ### H must be linear!  
+    ### Store in matrix S as Evenson does. 
+    ### Point 5 section 5.2 page 356 Evenson 2003. 
+
+    ## First figure out mean value of HA 
+    for (j in 1:nrobs) {
+        mean.value = 0
+        sum.value  = 0
+        for (k in 1:s$nrens) {
+            sum.value = sum.value + HA[j,k] 
+        }
+        mean.value = sum.value / s$nrens
+        HA_mean[j] <- mean.value
+    }
     
-    # Ensemble covariance matrix
-    PE <- tcrossprod(A_dash) / (s$ndims - 1)
+    ## HA' = HA - mean_HA 
+    for (j in 1:nrobs) {
+        for (k in 1:s$nrens) {
+            tmp = HA[j,k] - HA_mean[j]
+            S[j,k] <- tmp
+        }
+    }
     
-    # D: ensemble of observation perturbation
-    # a matrix of nrobs * nrens
-    D <- obs
+    ## Compute HA' + E (evenson page 356) , Ha' stored in S...so ES = S + E 
+    ES <- S + E
     
-#    # New A_mean
-#    A_mean = seq(0, s$nrobs)
-#    
-#    ## calculate A_mean: why nrobs?
-#    #A_mean <- 
-#
-#    ## assign measurement operator matrix
-#    #for (j in 1:s$nrobs) {               # need to create number of observations
-#        for (k in 1:s$ndims) {
-#            H[,k] <- obs[k,i]             # in the original script, this is not a obs value, i.e. obsop[x]
-#        }
-#    #}
-#    
-#    ## assign observation error matrix (nrobs * nrobs matrix)
-#    ## question: why nrobs not ndims?
-#    ##           why squared?
-#    ##           right now err_var_obs is a ndims by ndays matrix
-#    for (j in 1:s$nrobs) {
-#        if (err_type_obs[j] == 0) {
-#            R[j,j] <- (err_var_obs[j,i]) ^ 2
-#        } else {
-#            R[j,j] <- (err_var_obs[j,i] * abs(A_mean[j])) ^ 2
-#        } 
-#    }
-#    
+    
+    ### Compute SVD of HA'+E store in U, eqn 59 and pg 357 evenson example 2003
+    ## LAPACK bits for SVD
+    lwork = 2 * max(3 * s$nrens + nrobs, 5 * s$nrens)
+    
+    
+    
+    
+    
 #    ## set up observation vector
 #    for (j in 1:s$nrobs) {
 #        d[j] <- obs[j,i]       # again, the original obs matrix is a ndims by ndays matrix, 
