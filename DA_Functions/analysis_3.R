@@ -1,4 +1,4 @@
-analysis_3 <- function(A, s, p, obs, i,
+analysis_3 <- function(A, s, obs, i,
                        err_var, err_type, 
                        err_var_obs, err_type_obs, 
                        ens_var, q,
@@ -29,7 +29,8 @@ analysis_3 <- function(A, s, p, obs, i,
     X4 = matrix(0, s$nrens,s$nrens)     # local variable
     A_tmp = matrix(0, s$ndims,s$nrens)
     A_dash = matrix(0, s$ndims,s$nrens)
-    Reps = matrix(0, s$ndims,nrobs)    
+    Reps = matrix(0, s$ndims,nrobs) 
+    VT = matrix(0, s$nrens, s$nrens)
     
     sig = rep(0, nrmin)
     D_mean = rep(0, nrobs)
@@ -86,19 +87,19 @@ analysis_3 <- function(A, s, p, obs, i,
 
     ## First figure out mean value of HA 
     for (j in 1:nrobs) {
-        mean.value = 0
-        sum.value  = 0
+        mean.value <- 0
+        sum.value  <- 0
         for (k in 1:s$nrens) {
-            sum.value = sum.value + HA[j,k] 
+            sum.value <- sum.value + HA[j,k] 
         }
-        mean.value = sum.value / s$nrens
+        mean.value <- sum.value / s$nrens
         HA_mean[j] <- mean.value
     }
     
     ## HA' = HA - mean_HA 
     for (j in 1:nrobs) {
         for (k in 1:s$nrens) {
-            tmp = HA[j,k] - HA_mean[j]
+            tmp <- HA[j,k] - HA_mean[j]
             S[j,k] <- tmp
         }
     }
@@ -108,51 +109,117 @@ analysis_3 <- function(A, s, p, obs, i,
     
     
     ### Compute SVD of HA'+E store in U, eqn 59 and pg 357 evenson example 2003
-    ## LAPACK bits for SVD
-    lwork = 2 * max(3 * s$nrens + nrobs, 5 * s$nrens)
+    ### LAPACK bits for SVD
+    #lwork = 2 * max(3 * s$nrens + nrobs, 5 * s$nrens)
+    #
+    ## SVD: ES = U * SIGMA * V^T
+    ## ES: m * n,     i.e. nrobs * nrens
+    ## SIGMA: m * n, all zero except diagnomal elements
+    ## U: m * m
+    ## V^T: (V transposed) is an n * n orthogonal matrix
+    ## call dgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork, info)
+    # dgesvd_("S",        # the first min(m,n) columns of U (the left singular vectors) are returned in the array u
+    #         "N",        # no rows of V^T/V^H (no right singular vectors) are computed
+    #         nrobs,      # number of rows of the matrix ES
+    #         s$nrens,    # number of columns in ES 
+    #         es,         # array containing the m * n matrix ES, the 2nd dimension of a must be at least max (1,n)
+    #         nrobs,      # the leading dimension of the array es
+    #         sig,        # Contains the singular values of ES sorted so that sig (i) >= sig(i+1)
+    #         U,          # m by m output
+    #         nrobs,      # the leading dimension of the output array u 
+    #         VT,          # should be n by n, why we have n by m here?
+    #         inrens,     # the leading dimension of the output array v
+    #         work_,      # workspace array, its dimension max(1, lwork)
+    #         lwork,      # the dimension of the array work
+    #         ierr)       # output
+    # 
+    out <- svd(ES, nu = min(nrobs, s$nrens), nv = min(nrobs, s$nrens))
+    U <- out$u   
+    VT <- out$v
+    sig <- out$d
+
+    ## Convert to eigenvalues and work out sigsum - pg 357 evenson example 2003
+    for (j in 1:nrmins) {
+        tmp <- sig[j]^2
+        sig[j] <- tmp[j]
+        sigsum <- sigsum + sig[j]
+    }
     
+    ## Compute number of significant eigenvalues - pg 357 evenson example 2003
+        for (j in 1:nrmins) {
+            if ((sigsum1 / sigsum) < 0.999) {
+                nrsigma <- nrsigma + 1
+                sigsum1 <- sigsum1 + sig[j]
+                sig[j] <- 1.0 / sig[j]
+            } else {
+                for (k in j:nrmin) {
+                    sig[k] <- 0.0 
+                }
+            }
+        }
     
+    ## Compute X1 = sig * U - pg 357 evenson example 2003
+        for (j in 1:nrobs) {
+            for (k in 1:nrmins) {
+                X1[k,j] <- sig[k] *  U[j,k] 
+            }
+        }
     
+    ## Compute X2 = X1 * D - pg 357 evenson example 2003 
+    X2 <- X1 %*% D
+
+    ## Compute X3 = U * X2 - pg 357 evenson example 2003
+    X3 <- U %*% X2
+
+    ## Compute final analysis - pg 357 evenson example 2003
+    ## X4 = (HA')^T * X3
+    ## X5 = X4 +I
+    ## A = A + A' * X5
+    if ((2 * s$ndims * nrobs) > (s$nrens * (nrobs + s$ndims))) {
+        ## compute X4 = (HA')^T * X3 - note S matrix is HA' 
+        X4 <- t(S) %*% X3
+
+        ## Compute X5 = X4 + I (store in X4) 
+        for (k in 1:s$nrens) {
+            X4[k,k] <- X4[k,k] + 1.0;
+        }
+        
+        X4 <- X4 + I
+        
+        ## Compute A = A * X5 (note X5 stored in X4 -> see Evenson) */
+        A_tmp <- A
+        A <- A_tmp %*% X4
+        
+    } else {
+        ## Compute representers Reps = A' * S^T
+        
+        ## Calculate the mean of the ensemble required to work out A' 
+        for (j in 1:s$ndims) {
+            mean.value <- 0 
+            sum.value <- 0
+            for (k in 1:s$nrens) {
+                sum.value = sum.value + A[j,k]
+            }
+            mean.value = sum.value / s$nrens;
+            A_mean[j] <- mean
+        }
+        
+        ## Figure out A' 
+        for (j in 1:s$ndims) {
+            for (k in 1:s$nrens) {
+                A_dash[j,k] = A[j,k] - A_mean[j]
+            }
+        }
+        
+        ## Compute representers Reps = A' * S^T 
+        Reps <- A_dash %*% t(S)
+        
+        ## Compute A = A + Reps * X3 
+        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Reps, X3, 0.0, A_tmp);
+        A_tmp <- Reps %*% X3
+        A <- A + A_tmp
+    }
     
-    
-#    ## set up observation vector
-#    for (j in 1:s$nrobs) {
-#        d[j] <- obs[j,i]       # again, the original obs matrix is a ndims by ndays matrix, 
-#    }                          # where are the additional observations?
-#                               # which dims to use? 
-#
-#    ## (H.Pf.H^T + R)          
-#                               # mod_err, matrix, this should be a ndims * ndims matrix
-#    tmp <- mod_err %*% t(H)    # ndims * nrobs
-#    tmp1 <- H %*% tmp          # nrobs * nrobs
-#    tmp1 <- tmp1 + R           # nrobs * nrobs
-#    
-#    ## compuete Pf.H^T
-#    xx <- mod_err %*% t(H)    # ndims * nrobs
-#    
-#    ## Pf.H^T * (H.Pf.H^T + R)^-1   Kalman gain matrix: ndims * nrobs
-#    K <- xx %*% tmp1^-1        # ndims * nrobs
-#    
-#    ### model_analysis = model_forecast + K * (obs - model_forecast)
-#    ## H * model_sv i.e. H.Psi_f
-#    xxx <- H %*% A             # a vector of nrobs
-#    
-#    ## d - H.Psi_f. 
-#    d <- d - xxx               # a vector of nrobs
-#    
-#    ## Psi_f + K * (d - H.Psi_f)
-#    A <- A + K %*% d # a vector of ndims
-#    
-#    ### analysis of error covariance: Pa = Pf - K.H.Pf
-#    ## H.Pf
-#    crap <- H %*% mod_err      # nrobs * ndims
-#    
-#    ## K * H.Pf
-#    crap2 <- H %*% crap        # ndims * ndims
-#    
-#    ## Pf - K.H.Pf
-#    mod_err <- mod_err - crap2 # ndims * ndims
-    
-    return(list(A=A, ens_var=mod_err))
+    return(list(A=A))
 }
     

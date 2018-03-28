@@ -91,7 +91,7 @@ for (i in 1:ndays) {
     ens_var <- out$ens_var     # model variance
     q <- out$q                 # model error
     
-    #out2 <- analysis_3(A, s, p, B, i, 
+    #out2 <- analysis_3(A, s, obs, i, 
     #                   err_var, err_type, 
     #                   err_var_obs, err_type_obs, 
     #                   ens_var, q,
