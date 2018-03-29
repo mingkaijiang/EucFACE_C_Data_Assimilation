@@ -26,7 +26,6 @@ analysis <- function(A, s, obs, i,
     X2 <- matrix(0, nrmin,s$nrens)       # local variable
     X3 <- matrix(0, nrobs,s$nrens)       # local variable
     X4 <- matrix(0, s$nrens,s$nrens)     # local variable
-    A_tmp <- matrix(0, s$ndims,s$nrens)
     A_dash <- matrix(0, s$ndims,s$nrens)
     Reps <- matrix(0, s$ndims,nrobs) 
     VT <- matrix(0, s$nrens, s$nrens)
@@ -40,7 +39,7 @@ analysis <- function(A, s, obs, i,
     ## Generate the H matrix: gsl_matrix_set(H, j, k, (o + j)->obsop[k]);
     for (j in 1:nrobs) {
         for (k in 1:s$ndims) {
-            H[j,k] <- obsop[k]   # This should be a pointer operator function
+            H[j,k] <- obsop[k]   
         }
     }
 
@@ -52,7 +51,8 @@ analysis <- function(A, s, obs, i,
         if (err_type_obs[8] == 0) {
             E[j,] <- rnorm(s$nrens, mean=0, sd=err_var_obs[8,i]) 
         } else {
-            E[j,] <- rnorm(s$nrens, mean=obs[8,j], sd=abs(obs[8,j] * err_var_obs[8,i])) 
+            #E[j,] <- rnorm(s$nrens, mean=obs[8,j], sd=abs(obs[8,j] * err_var_obs[8,i])) 
+            E[j,] <- rnorm(s$nrens, mean=0, sd=abs(obs[8,j] * err_var_obs[8,i])) 
         }
     }
     E_mean <- rowMeans(E, na.rm=T)
@@ -163,8 +163,7 @@ analysis <- function(A, s, obs, i,
         X4 <- X4 + I
         
         ## Compute A = A * X5 (note X5 stored in X4 -> see Evenson) */
-        A_tmp <- A
-        A <- A_tmp %*% X4
+        A <- A %*% X4
         
     } else {
         ## Compute representers Reps = A' * S^T
@@ -182,8 +181,7 @@ analysis <- function(A, s, obs, i,
         Reps <- A_dash %*% t(S)
         
         ## Compute A = A + Reps * X3 
-        A_tmp <- Reps %*% X3
-        A <- A + A_tmp
+        A <- A + Reps %*% X3
     }
     
     return(A)
