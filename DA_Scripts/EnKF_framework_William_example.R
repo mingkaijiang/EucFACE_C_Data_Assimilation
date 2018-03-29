@@ -34,7 +34,7 @@ err_var <- initialise_error_variance(s, err_var)
 err_type <- initialise_error_type(s, err_type)
 
 ####----  Set up the observation stuffs ----####
-obsDF <- read.csv("obs_cf_1.csv", header=F)
+obsDF <- read.csv("observation/obs_cf_1.csv", header=F)
 nrobs <- ncol(obsDF)-1
 obs <- as.matrix(obsDF[,2:ncol(obsDF)])
 obsop <- initialise_obs_operator()
