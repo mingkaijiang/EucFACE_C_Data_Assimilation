@@ -1,3 +1,6 @@
+#### This is a model built based on Martin's code logic
+#### and will need to add R code specifically on data assimilation 
+#### to complete the framework - specifically within analysis function
 
 ####---- Clear the console ----####
 rm(list=ls(all=TRUE))
@@ -31,23 +34,18 @@ err_var <- initialise_error_variance(s, err_var)
 err_type <- initialise_error_type(s, err_type)
 
 ####----  Set up the observation stuffs ----####
-obs <- c()
-### Create the observational matrix, for each state and day
-#B <- matrix(NA, s$ndims, ndays)
-#
-#### intialize measurement noise matrix
-#q_obs <- matrix(rnorm(s$ndims*ndays, 0.0, 1.0), s$ndims, ndays)
-#    
-#### initialize measurement matrix
-#B <- initialise_observation(p, s, B)
-#
+obsDF <- read.csv("obs_cf_1.csv", header=F)
+nrobs <- ncol(obsDF)-1
+obs <- as.matrix(obsDF[,2:ncol(obsDF)])
+obsop <- initialise_obs_operator()
+#nrobs <- initialise_nrobs(obs)
+
 #### initialize measurement error variance and type
-#err_var_obs <- matrix(0, s$ndims, ndays)
-#err_type_obs <- rep(0, s$ndims)
-#ens_var_obs <- matrix(0, s$ndims, ndays)
-#
-#err_var_obs <- initialise_obs_error_variance(s, err_var_obs)
-#err_type_obs <- initialise_obs_error_type(s, err_type_obs)
+err_var_obs <- matrix(0, s$ndims, ndays)
+err_type_obs <- rep(0, s$ndims)
+
+err_var_obs <- initialise_obs_error_variance(s, err_var_obs)
+err_type_obs <- initialise_obs_error_type(s, err_type_obs)
 
 
 ####----  set up storage df to store the simulation output, with uncertainties ----####
@@ -69,24 +67,19 @@ for (i in 1:ndays) {
                     err_type, ens_var, q)
     
     ## split the list of the forecast model
-    A <- out$A
-    ens_var <- out$ens_var
-    q <- out$q
+    A <- out$A                 # model prediction ensemble member
+    ens_var <- out$ens_var     # model variance
+    q <- out$q                 # model error
     
-    ## Recalcualte model forecast where observations are avaliable
-    ## need to consider obs at timestep i
-    # if (s$nrobs > 0) {
-    #     analysis(A, s, obs)
-    # }
+    A <- analysis(A, s, obs, i, 
+                  err_var, err_type, 
+                  err_var_obs, err_type_obs, 
+                  ens_var, q)
     
-    # Save output
+    ## Save output
     ensembleDF[i, 2:(s$ndims*2+1)] <- dump_output(s, A)
     
 }
-
-### this is the predicted values
-sim <- t(as.matrix(ensembleDF[,c("RA", "AF", "AW", "AR", "LF", "LW", "LR",
-                               "CF", "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP")]))
 
 
 ####----  Plotting ----####
@@ -100,8 +93,8 @@ colnames(obsDF) <- c("Days", "RA", "AF", "AW", "AR", "LF", "LW", "LR",
                           "CW_STDEV", "CR_STDEV", "RH1_STDEV", "RH2_STDEV", 
                           "D_STDEV", "CL_STDEV", "CS_STDEV", "GPP_STDEV")
 obsDF$Days <- c(1:ndays)
-obsDF[,2:(s$ndims+1)] <- as.data.frame(t(B))
-obsDF[,(s$ndims+1):ncol(obsDF)] <- as.data.frame(t(B)*t(err_var_obs))
+obsDF$CF <- mean(obs[s$POS_CF,], na.rm=T)
+obsDF$CF_STDEV <- sd(obs[s$POS_CF,], na.rm=T)
 
 
 ### plotting    
@@ -109,6 +102,6 @@ ggplot() +
     geom_ribbon(data=ensembleDF, aes(x = Days, ymin=CF-CF_STDEV, 
                   ymax=CF+CF_STDEV), fill="grey", alpha=1) +
     geom_line(data=ensembleDF, aes(y = CF, x=Days), color = "black") +
-    geom_point(data=obsDF, aes(y = CF, x=Days), color="red") +
-    geom_errorbar(data=obsDF, aes(ymin=CF-CF_STDEV, ymax=CF+CF_STDEV, x=Days), 
-                  width=0.1, position=position_dodge(0.05), color="brown")
+    geom_point(data=obsDF, aes(y = CF, x=Days), color="red")  #+
+    #geom_errorbar(data=obsDF, aes(ymin=CF-CF_STDEV, ymax=CF+CF_STDEV, x=Days), 
+    #              width=0.1, position=position_dodge(0.05), color="brown", alpha=1)
