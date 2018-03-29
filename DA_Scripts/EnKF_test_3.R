@@ -37,25 +37,15 @@ err_type <- initialise_error_type(s, err_type)
 obsDF <- read.csv("obs_cf_1.csv", header=F)
 nrobs <- ncol(obsDF)-1
 obs <- as.matrix(obsDF[,2:ncol(obsDF)])
+obsop <- initialise_obs_operator()
 #nrobs <- initialise_nrobs(obs)
 
-
-### Create the observational matrix, for each state and day
-#B <- matrix(NA, s$ndims, ndays)
-#
-#### intialize measurement noise matrix
-#q_obs <- matrix(rnorm(s$ndims*ndays, 0.0, 1.0), s$ndims, ndays)
-#    
-#### initialize measurement matrix
-#B <- initialise_observation(p, s, B)
-#
 #### initialize measurement error variance and type
-#err_var_obs <- matrix(0, s$ndims, ndays)
-#err_type_obs <- rep(0, s$ndims)
-#ens_var_obs <- matrix(0, s$ndims, ndays)
-#
-#err_var_obs <- initialise_obs_error_variance(s, err_var_obs)
-#err_type_obs <- initialise_obs_error_type(s, err_type_obs)
+err_var_obs <- matrix(0, s$ndims, ndays)
+err_type_obs <- rep(0, s$ndims)
+
+err_var_obs <- initialise_obs_error_variance(s, err_var_obs)
+err_type_obs <- initialise_obs_error_type(s, err_type_obs)
 
 
 ####----  set up storage df to store the simulation output, with uncertainties ----####
@@ -68,16 +58,6 @@ colnames(ensembleDF) <- c("Days", "RA", "AF", "AW", "AR", "LF", "LW", "LR",
                           "CW_STDEV", "CR_STDEV", "RH1_STDEV", "RH2_STDEV", 
                           "D_STDEV", "CL_STDEV", "CS_STDEV", "GPP_STDEV")
 ensembleDF$Days <- c(1:ndays)
-
-### Specify the observation/measurement function
-#FFfunction <- function (A, k){
-#    A[c(1:16)]}
-
-### predicted ensemble mean for each variable at each time step
-#A_mean <- matrix(0, ncol = ncol(A), nrow = nrow(A))
-
-### predicted observation mean
-#B_mean <- matrix(0, ncol = ncol(B), nrow = nrow(B))
 
 ####---- Run the model ----####
 for (i in 1:ndays) {
