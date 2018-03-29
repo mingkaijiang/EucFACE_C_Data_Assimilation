@@ -1,8 +1,7 @@
 analysis_3 <- function(A, s, obs, i,
                        err_var, err_type, 
                        err_var_obs, err_type_obs, 
-                       ens_var, q,
-                       ens_var_obs, q_obs) {
+                       ens_var, q) {
     
     ### The standard analysis eqn: A = A + Pe H^T(H Pe H^T + Re)^-1 (D - H A)    (eq 48)
     ### can be reformed using D' = D - HA, Pe = A'(A')^T, Re = YY^T

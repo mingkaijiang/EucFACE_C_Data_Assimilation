@@ -71,24 +71,15 @@ for (i in 1:ndays) {
     ens_var <- out$ens_var     # model variance
     q <- out$q                 # model error
     
-    #out2 <- analysis_3(A, s, obs, i, 
-    #                   err_var, err_type, 
-    #                   err_var_obs, err_type_obs, 
-    #                   ens_var, q,
-    #                   ens_var_obs, q_obs)
-    
-    #A <- out2$A
+    A <- analysis_3(A, s, obs, i, 
+                       err_var, err_type, 
+                       err_var_obs, err_type_obs, 
+                       ens_var, q)
     
     ## Save output
     ensembleDF[i, 2:(s$ndims*2+1)] <- dump_output(s, A)
     
 }
-
-#write.csv(ensembleDF, "obs.csv", row.names=F)
-
-### this is the predicted values
-sim <- t(as.matrix(ensembleDF[,c("RA", "AF", "AW", "AR", "LF", "LW", "LR",
-                               "CF", "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP")]))
 
 
 ####----  Plotting ----####
@@ -102,15 +93,15 @@ colnames(obsDF) <- c("Days", "RA", "AF", "AW", "AR", "LF", "LW", "LR",
                           "CW_STDEV", "CR_STDEV", "RH1_STDEV", "RH2_STDEV", 
                           "D_STDEV", "CL_STDEV", "CS_STDEV", "GPP_STDEV")
 obsDF$Days <- c(1:ndays)
-obsDF[,2:(s$ndims+1)] <- as.data.frame(t(B))
-obsDF[,(s$ndims+1):ncol(obsDF)] <- as.data.frame(t(B)*t(err_var_obs))
+obsDF$CF <- mean(obs[s$POS_CF,], na.rm=T)
+obsDF$CF_STDEV <- sd(obs[s$POS_CF,], na.rm=T)
 
 
 ### plotting    
 ggplot() +
     geom_ribbon(data=ensembleDF, aes(x = Days, ymin=CF-CF_STDEV, 
                   ymax=CF+CF_STDEV), fill="grey", alpha=1) +
-    geom_line(data=ensembleDF, aes(y = CF, x=Days), color = "black") #+
-#    geom_point(data=obsDF, aes(y = CF, x=Days), color="red") # +
-#    geom_errorbar(data=obsDF, aes(ymin=CF-CF_STDEV, ymax=CF+CF_STDEV, x=Days), 
-#                  width=0.1, position=position_dodge(0.05), color="brown", alpha=1)
+    geom_line(data=ensembleDF, aes(y = CF, x=Days), color = "black") +
+    geom_point(data=obsDF, aes(y = CF, x=Days), color="red")  #+
+    #geom_errorbar(data=obsDF, aes(ymin=CF-CF_STDEV, ymax=CF+CF_STDEV, x=Days), 
+    #              width=0.1, position=position_dodge(0.05), color="brown", alpha=1)
