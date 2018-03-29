@@ -98,10 +98,10 @@ obsDF$CF_STDEV <- sd(obs[s$POS_CF,], na.rm=T)
 
 
 ### plotting    
-ggplot() +
+ggplot(ylim=c(0,600)) +
     geom_ribbon(data=ensembleDF, aes(x = Days, ymin=CF-CF_STDEV, 
                   ymax=CF+CF_STDEV), fill="grey", alpha=1) +
     geom_line(data=ensembleDF, aes(y = CF, x=Days), color = "black") +
-    geom_point(data=obsDF, aes(y = CF, x=Days), color="red")  #+
-    #geom_errorbar(data=obsDF, aes(ymin=CF-CF_STDEV, ymax=CF+CF_STDEV, x=Days), 
-    #              width=0.1, position=position_dodge(0.05), color="brown", alpha=1)
+    geom_point(data=obsDF, aes(y = CF, x=Days), color="red")  +
+    geom_ribbon(data=obsDF, aes(ymin=CF-CF_STDEV, ymax=CF+CF_STDEV, x=Days), 
+                  fill="brown", alpha=1/10)

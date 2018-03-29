@@ -51,7 +51,6 @@ analysis <- function(A, s, obs, i,
         if (err_type_obs[8] == 0) {
             E[j,] <- rnorm(s$nrens, mean=0, sd=err_var_obs[8,i]) 
         } else {
-            #E[j,] <- rnorm(s$nrens, mean=obs[8,j], sd=abs(obs[8,j] * err_var_obs[8,i])) 
             E[j,] <- rnorm(s$nrens, mean=0, sd=abs(obs[8,j] * err_var_obs[8,i])) 
         }
     }
