@@ -98,7 +98,7 @@ obsDF$CF_STDEV <- sd(obs[s$POS_CF,], na.rm=T)
 
 
 ### plotting    
-ggplot(ylim=c(0,600)) +
+ggplot() +
     geom_ribbon(data=ensembleDF, aes(x = Days, ymin=CF-CF_STDEV, 
                   ymax=CF+CF_STDEV), fill="grey", alpha=1) +
     geom_line(data=ensembleDF, aes(y = CF, x=Days), color = "black") +
