@@ -1,6 +1,7 @@
-#### This is a model built based on Martin's code logic
-#### and will need to add R code specifically on data assimilation 
-#### to complete the framework - specifically within analysis function
+#### This is a simple model for assimilating the C cycle reported in Williams et al. 2005 GCB
+#### Note:
+#### 1. Need to add EnKF function (either developing our own or using existing R function)
+#### 2. Need to modify structure to incorporate the EucFACE data
 
 ####---- Clear the console ----####
 rm(list=ls(all=TRUE))
