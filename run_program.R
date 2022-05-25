@@ -1,7 +1,13 @@
 #### This is a simple model for assimilating the C cycle reported in Williams et al. 2005 GCB
 #### Note:
 #### 1. Need to add EnKF function (either developing our own or using existing R function)
-#### 2. Need to modify structure to incorporate the EucFACE data
+#### 2. Need to modify structure to incorporate the EucFACE data (mean and uncertainty = currently error is estimated)
+#### 3. Need to replace the climate forcing file with EucFACE data
+#### More advanced:
+#### 4. Incorporate appropriate function to calculate GPP here within the script
+#### 5. Then we can do water-carbon coupling.
+#### 6. What about machine learning algorithm?
+
 
 ####---- Clear the console ----####
 rm(list=ls(all=TRUE))
@@ -35,11 +41,13 @@ err_var <- initialise_error_variance(s, err_var)
 err_type <- initialise_error_type(s, err_type)
 
 ####----  Set up the observation stuffs ----####
+#### Note: I think obsDF should switch rows and columns, so that variable names are headers, but maybe not.
+####       For now stick with the current code. 
 obsDF <- read.csv("observation/obs_cf_1.csv", header=F)
 nrobs <- ncol(obsDF)-1
 obs <- as.matrix(obsDF[,2:ncol(obsDF)])
 obsop <- initialise_obs_operator()
-#nrobs <- initialise_nrobs(obs)
+nrobs <- initialise_nrobs(obs)
 
 #### initialize measurement error variance and type
 err_var_obs <- matrix(0, s$ndims, ndays)
