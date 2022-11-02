@@ -7,7 +7,7 @@ pacman::p_load(rlang,
                mvtnorm) # add other packages needed to this list
 
 # Sourcing all R files in the modules subdirectory
-sourcefiles <- dir("DA_Functions", pattern="[.]R$", recursive = TRUE, full.names = TRUE)
+sourcefiles <- dir("DA_Functions_new", pattern="[.]R$", recursive = TRUE, full.names = TRUE)
 for(z in sourcefiles)source(z)
 
 

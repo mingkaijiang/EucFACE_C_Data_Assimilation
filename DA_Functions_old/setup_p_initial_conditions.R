@@ -31,7 +31,7 @@ setup_p_initial_conditions <- function() {
     p$t9 = 2.65E-06
     
     ### Initial conditions
-    ## Filiage C pool
+    ## Foliage C pool
     p$cf0 = 57.7049
     
     ## Wood (stems and coarse roots)
