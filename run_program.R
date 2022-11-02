@@ -1,12 +1,8 @@
 #### This is a simple model for assimilating the C cycle reported in Williams et al. 2005 GCB
-#### Note:
-#### 1. Need to add EnKF function (either developing our own or using existing R function)
-#### 2. Need to modify structure to incorporate the EucFACE data (mean and uncertainty = currently error is estimated)
-#### 3. Need to replace the climate forcing file with EucFACE data
-#### More advanced:
-#### 4. Incorporate appropriate function to calculate GPP here within the script
-#### 5. Then we can do water-carbon coupling.
-#### 6. What about machine learning algorithm?
+#### Note: revising the script to make sure it is correctly written
+#### Previous functions stored in: DA_Functions_old folder
+#### Previous run script is named as: run_program_old.R
+
 
 
 ####---- Clear the console ----####
@@ -43,18 +39,18 @@ err_type <- initialise_error_type(s, err_type)
 ####----  Set up the observation stuffs ----####
 #### Note: I think obsDF should switch rows and columns, so that variable names are headers, but maybe not.
 ####       For now stick with the current code. 
-obsDF <- read.csv("observation/obs_cf_1.csv", header=F)
+obsDF <- read.csv("observation/obs_old.csv", header=T)
 nrobs <- ncol(obsDF)-1
 obs <- as.matrix(obsDF[,2:ncol(obsDF)])
-obsop <- initialise_obs_operator()
+obsop <- initialise_obs_operator(obs)
 nrobs <- initialise_nrobs(obs)
 
 #### initialize measurement error variance and type
 err_var_obs <- matrix(0, s$ndims, ndays)
-err_type_obs <- rep(0, s$ndims)
+err_type_obs <- matrix(0, s$ndims, ndays)
 
-err_var_obs <- initialise_obs_error_variance(s, err_var_obs)
-err_type_obs <- initialise_obs_error_type(s, err_type_obs)
+err_var_obs <- initialise_obs_error_variance(s, err_var_obs, obs)
+err_type_obs <- initialise_obs_error_type(s, err_type_obs, obs)
 
 
 ####----  set up storage df to store the simulation output, with uncertainties ----####
@@ -80,10 +76,12 @@ for (i in 1:ndays) {
     ens_var <- out$ens_var     # model variance
     q <- out$q                 # model error
     
-    A <- analysis(A, s, obs, i, 
-                  err_var, err_type, 
-                  err_var_obs, err_type_obs, 
-                  ens_var, q)
+    A <- analysis_3(A, s, obs, i, nrobs, obsop,
+                    err_var, err_type, 
+                    err_var_obs, err_type_obs, 
+                    ens_var, q)
+    
+    #A <- analysis_2(A, s, obs, i)
     
     ## Save output
     ensembleDF[i, 2:(s$ndims*2+1)] <- dump_output(s, A)
@@ -93,17 +91,17 @@ for (i in 1:ndays) {
 
 ####----  Plotting ----####
 ### prepare obs matrix to df
-obsDF <- matrix(NA, nrow=ndays, ncol=(1+s$ndims*2))
-obsDF <- as.data.frame(obsDF)
-colnames(obsDF) <- c("Days", "RA", "AF", "AW", "AR", "LF", "LW", "LR",
-                          "CF", "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP", 
-                          'RA_STDEV', "AF_STDEV", "AW_STDEV", "AR_STDEV", 
-                          "LF_STDEV", "LW_STDEV", "LR_STDEV", "CF_STDEV", 
-                          "CW_STDEV", "CR_STDEV", "RH1_STDEV", "RH2_STDEV", 
-                          "D_STDEV", "CL_STDEV", "CS_STDEV", "GPP_STDEV")
-obsDF$Days <- c(1:ndays)
-obsDF$CF <- mean(obs[s$POS_CF,], na.rm=T)
-obsDF$CF_STDEV <- sd(obs[s$POS_CF,], na.rm=T)
+#obsDF <- matrix(NA, nrow=ndays, ncol=(1+s$ndims*2))
+#obsDF <- as.data.frame(obsDF)
+#colnames(obsDF) <- c("Days", "RA", "AF", "AW", "AR", "LF", "LW", "LR",
+#                          "CF", "CW", "CR", "RH1", "RH2", "D", "CL", "CS", "GPP", 
+#                          'RA_STDEV', "AF_STDEV", "AW_STDEV", "AR_STDEV", 
+#                          "LF_STDEV", "LW_STDEV", "LR_STDEV", "CF_STDEV", 
+#                          "CW_STDEV", "CR_STDEV", "RH1_STDEV", "RH2_STDEV", 
+#                          "D_STDEV", "CL_STDEV", "CS_STDEV", "GPP_STDEV")
+#obsDF$Days <- c(1:ndays)
+#obsDF$CF <- mean(obs[s$POS_CF,], na.rm=T)
+#obsDF$CF_STDEV <- sd(obs[s$POS_CF,], na.rm=T)
 
 
 ### plotting    
@@ -111,6 +109,6 @@ ggplot() +
     geom_ribbon(data=ensembleDF, aes(x = Days, ymin=CF-CF_STDEV, 
                   ymax=CF+CF_STDEV), fill="grey", alpha=1) +
     geom_line(data=ensembleDF, aes(y = CF, x=Days), color = "black") +
-    geom_point(data=obsDF, aes(y = CF, x=Days), color="red")  +
-    geom_ribbon(data=obsDF, aes(ymin=CF-CF_STDEV, ymax=CF+CF_STDEV, x=Days), 
-                  fill="brown", alpha=1/10)
+    geom_point(data=obsDF, aes(y = CF, x=Days), color="red")  #+
+    #geom_ribbon(data=obsDF, aes(ymin=CF-CF_STDEV, ymax=CF+CF_STDEV, x=Days), 
+    #              fill="brown", alpha=1/10)
