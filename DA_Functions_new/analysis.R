@@ -1,7 +1,8 @@
-analysis <- function(A, s, obs, i,
-                       err_var, err_type, 
-                       err_var_obs, err_type_obs, 
-                       ens_var, q) {
+analysis <- function(A, s, obs, i, nrobs, obsop,
+                     err_var, err_type, 
+                     err_var_obs, err_type_obs, 
+                     ens_var, q,
+                     ens_var_obs, q_obs) {
     
     ### The standard analysis eqn: A = A + Pe H^T(H Pe H^T + Re)^-1 (D - H A)    (eq 48)
     ### can be reformed using D' = D - HA, Pe = A'(A')^T, Re = YY^T
@@ -9,59 +10,67 @@ analysis <- function(A, s, obs, i,
     ### becomes A = A + A' A'^T H^T(HA' A'^T H^T + YY^T)^-1 D'
     
     ## Define matrix and vector
-    nrmin <- min(nrobs, s$nrens)         # Minimum of nrobs and nrens
+    nrmin <- min(nrobs[i], s$nrens)         # Minimum of nrobs and nrens
     nrsigma <- 0
     sigsum <- 0
     sigsum1 <- 0
     
     I <- diag(1, s$nrens,s$nrens)        # identity matrix
-    U <- matrix(0, nrobs,nrmin)          # local variable
-    D <- matrix(0, nrobs,s$nrens)        # matrix holding innovations
-    S <- matrix(0, nrobs,s$nrens)        # matrix holding product of HA'
-    E <- matrix(0, nrobs,s$nrens)        # Matrix holding observation uncertainty
-    H <- matrix(0, nrobs,s$ndims)        # Matrix holding observation operator
-    HA <- matrix(0, nrobs,s$nrens)      
-    ES <- matrix(0, nrobs,s$nrens)       # Matrix holding product of HA' + E
-    X1 <- matrix(0, nrmin,nrobs)         # local variable
+    U <- matrix(0, nrobs[i],nrmin)          # local variable
+    D <- matrix(0, nrobs[i],s$nrens)        # matrix holding innovations
+    S <- matrix(0, nrobs[i],s$nrens)        # matrix holding product of HA'
+    E <- matrix(0, nrobs[i],s$nrens)        # Matrix holding observation uncertainty
+    H <- matrix(0, nrobs[i],s$ndims)        # Matrix holding observation operator
+    HA <- matrix(0, nrobs[i],s$nrens)      
+    ES <- matrix(0, nrobs[i],s$nrens)       # Matrix holding product of HA' + E
+    X1 <- matrix(0, nrmin,nrobs[i])         # local variable
     X2 <- matrix(0, nrmin,s$nrens)       # local variable
     X3 <- matrix(0, nrobs,s$nrens)       # local variable
     X4 <- matrix(0, s$nrens,s$nrens)     # local variable
+    A_tmp <- matrix(0, s$ndims,s$nrens)
     A_dash <- matrix(0, s$ndims,s$nrens)
     Reps <- matrix(0, s$ndims,nrobs) 
     VT <- matrix(0, s$nrens, s$nrens)
     
     sig <- rep(0, nrmin)
-    D_mean <- rep(0, nrobs)
-    E_mean <- rep(0, nrobs)
-    HA_mean <- rep(0, nrobs)
+    D_mean <- rep(0, s$nrobs)
+    E_mean <- rep(0, s$nrobs)
+    HA_mean <- rep(0, s$nrobs)
     A_mean <- rep(0, s$ndims)
     
     ## Generate the H matrix: gsl_matrix_set(H, j, k, (o + j)->obsop[k]);
-    for (j in 1:nrobs) {
-        for (k in 1:s$ndims) {
-            H[j,k] <- obsop[k]   
-        }
+    pos <- which(obsop[i,]==1)
+    
+    for (j in 1:nrobs[i]) {
+        
+        H[j,pos[j]] <- 1
+        
+        
+        #for (k in 1:s$ndims) {
+        #    H[j,k] <- obsop[i,k]
+        #}
     }
-
+    
     ## Compute HA
     HA <- H %*% A
     
     ## Calculate observation uncertainty (defined as gamma in Eversen 2003)
-    for (j in 1:nrobs) {
-        if (err_type_obs[8] == 0) {
-            E[j,] <- rnorm(s$nrens, mean=0, sd=err_var_obs[8,i]) 
+    for (j in 1:nrobs[i]) {
+        if (err_type_obs[!is.na(err_type_obs[,i]),i][j] == 0) {
+            E[j,] <- rnorm(s$nrens, mean=0, sd=err_var_obs[!is.na(err_var_obs[,i]), i][j])
         } else {
-            E[j,] <- rnorm(s$nrens, mean=0, sd=abs(obs[8,j] * err_var_obs[8,i])) 
+            E[j,] <- rnorm(s$nrens, mean=obs[i,!is.na(obs[i,])][j], 
+                           sd=abs(obs[i,!is.na(obs[i,])][j] * err_var_obs[!is.na(err_var_obs[,i]), i][j])) 
         }
     }
     E_mean <- rowMeans(E, na.rm=T)
     
     
     ## Compute the innovations, D', where D' = D - HA. eqn 53 evenson 2003 
-    for (j in 1:nrobs) {
+    for (j in 1:nrobs[i]) {
         for (k in 1:s$nrens) {
             ## Add the observation uncertainty to observation (eqn 48 Evenson 2003) before taking HA away from it */
-            D[j,k] <- E[j,k] + obs[8,j] - HA[j,k]
+            D[j,k] <- E[j,k] + obs[i,!is.na(obs[i,])][j] - HA[j,k]
         }
     }
     D_mean <- rowMeans(D, na.rm=T)
@@ -71,12 +80,12 @@ analysis <- function(A, s, obs, i,
     ### H must be linear!  
     ### Store in matrix S as Evenson does. 
     ### Point 5 section 5.2 page 356 Evenson 2003. 
-
+    
     ## First figure out mean value of HA 
     HA_mean <- rowMeans(HA, na.rm=T)
     
     ## HA' = HA - mean_HA 
-    for (j in 1:nrobs) {
+    for (j in 1:nrobs[i]) {
         for (k in 1:s$nrens) {
             S[j,k] <- HA[j,k] - HA_mean[j]
         }
@@ -110,11 +119,11 @@ analysis <- function(A, s, obs, i,
     #         lwork,      # the dimension of the array work
     #         ierr)       # output
     # 
-    out <- svd(ES, nu = min(nrobs, s$nrens), nv = min(nrobs, s$nrens))
+    out <- svd(ES, nu = min(nrobs[i], s$nrens), nv = min(nrobs[i], s$nrens))
     U <- out$u   
     VT <- out$v
     sig <- out$d
-
+    
     ## Convert to eigenvalues and work out sigsum - pg 357 evenson example 2003
     for (j in 1:nrmin) {
         sig[j] <- sig[j]^2
@@ -122,39 +131,39 @@ analysis <- function(A, s, obs, i,
     }
     
     ## Compute number of significant eigenvalues - pg 357 evenson example 2003
-        for (j in 1:nrmin) {
-            if ((sigsum1 / sigsum) < 0.999) {
-                nrsigma <- nrsigma + 1
-                sigsum1 <- sigsum1 + sig[j]
-                sig[j] <- 1.0 / sig[j]
-            } else {
-                for (k in j:nrmin) {
-                    sig[k] <- 0.0 
-                }
+    for (j in 1:nrmin) {
+        if ((sigsum1 / sigsum) < 0.999) {
+            nrsigma <- nrsigma + 1
+            sigsum1 <- sigsum1 + sig[j]
+            sig[j] <- 1.0 / sig[j]
+        } else {
+            for (k in j:nrmin) {
+                sig[k] <- 0.0 
             }
         }
+    }
     
     ## Compute X1 = sig * U - pg 357 evenson example 2003
-        for (j in 1:nrobs) {
-            for (k in 1:nrmin) {
-                X1[k,j] <- sig[k] *  U[j,k] 
-            }
+    for (j in 1:nrobs[i]) {
+        for (k in 1:nrmin) {
+            X1[k,j] <- sig[k] *  U[j,k] 
         }
+    }
     
     ## Compute X2 = X1 * D - pg 357 evenson example 2003 
     X2 <- X1 %*% D
-
+    
     ## Compute X3 = U * X2 - pg 357 evenson example 2003
     X3 <- U %*% X2
-
+    
     ## Compute final analysis - pg 357 evenson example 2003
     ## X4 = (HA')^T * X3
     ## X5 = X4 +I
     ## A = A + A' * X5
-    if ((2 * s$ndims * nrobs) > (s$nrens * (nrobs + s$ndims))) {
+    if ((2 * s$ndims * nrobs[i]) > (s$nrens * (nrobs[i] + s$ndims))) {
         ## compute X4 = (HA')^T * X3 - note S matrix is HA' 
         X4 <- t(S) %*% X3
-
+        
         ## Compute X5 = X4 + I (store in X4) 
         for (k in 1:s$nrens) {
             X4[k,k] <- X4[k,k] + 1.0;
@@ -162,7 +171,8 @@ analysis <- function(A, s, obs, i,
         X4 <- X4 + I
         
         ## Compute A = A * X5 (note X5 stored in X4 -> see Evenson) */
-        A <- A %*% X4
+        A_tmp <- A
+        A <- A_tmp %*% X4
         
     } else {
         ## Compute representers Reps = A' * S^T
@@ -180,9 +190,10 @@ analysis <- function(A, s, obs, i,
         Reps <- A_dash %*% t(S)
         
         ## Compute A = A + Reps * X3 
-        A <- A + Reps %*% X3
+        A_tmp <- Reps %*% X3
+        A <- A + A_tmp
     }
     
     return(A)
 }
-    
+
