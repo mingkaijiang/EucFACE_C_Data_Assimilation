@@ -70,7 +70,8 @@ analysis <- function(A, s, obs, i, nrobs, obsop,
     for (j in 1:nrobs[i]) {
         for (k in 1:s$nrens) {
             ## Add the observation uncertainty to observation (eqn 48 Evenson 2003) before taking HA away from it */
-            D[j,k] <- E[j,k] + obs[i,!is.na(obs[i,])][j] - HA[j,k]
+            #D[j,k] <- E[j,k] + obs[i,!is.na(obs[i,])][j] - HA[j,k]
+            D[j,k] <- obs[i,!is.na(obs[i,])][j] - HA[j,k]
         }
     }
     D_mean <- rowMeans(D, na.rm=T)
